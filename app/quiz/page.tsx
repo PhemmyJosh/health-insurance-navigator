@@ -270,31 +270,46 @@ function StepContent({
               </div>
             </div>
 
-            {/* City — only show after state selected */}
-            {answers.state && (
-              <div className="flex flex-col gap-1">
-                <label className="text-sm font-medium text-gray-500">City or area</label>
-                <div className="relative">
-                  <select
-                    value={answers.city}
-                    onChange={(e) => update("city", e.target.value)}
-                    className="w-full appearance-none border-2 border-gray-200 focus:border-[#e8603c] rounded-xl pl-4 pr-12 py-3 text-base outline-none bg-white transition-colors"
-                  >
-                    <option value="">Select city or area</option>
-                    {getCitiesByState(answers.state).map((c) => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
-                  </select>
-                  <CaretDown size={20} color="#888888" className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
-                </div>
+            {/* City — always visible, disabled until state is selected */}
+            <div className="flex flex-col gap-1">
+              <label className={`text-sm font-medium ${answers.state ? "text-gray-500" : "text-gray-300"}`}>
+                City or area
+              </label>
+              <div className="relative">
+                <select
+                  value={answers.city}
+                  onChange={(e) => update("city", e.target.value)}
+                  disabled={!answers.state}
+                  className={`w-full appearance-none border-2 rounded-xl pl-4 pr-12 py-3 text-base outline-none transition-colors ${
+                    answers.state
+                      ? "border-gray-200 focus:border-[#e8603c] bg-white text-gray-900"
+                      : "border-gray-100 bg-gray-50 text-gray-400 cursor-not-allowed"
+                  }`}
+                >
+                  {!answers.state ? (
+                    <option value="">Select a state first</option>
+                  ) : (
+                    <>
+                      <option value="">Select your city or area</option>
+                      {getCitiesByState(answers.state).map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </>
+                  )}
+                </select>
+                <CaretDown
+                  size={20}
+                  color={answers.state ? "#888888" : "#d1d5db"}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none"
+                />
               </div>
-            )}
+            </div>
           </div>
 
           {/* Helper for family/couple */}
           {answers.coverage !== "individual" && answers.state && (
             <p className="text-sm text-gray-400 mt-2">
-              Skip this if your family is in a different location — you can specify their area when selecting a hospital.
+              Skip the city if your family is in a different location. State is still required.
             </p>
           )}
         </Question>
