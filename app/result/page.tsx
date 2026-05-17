@@ -4,18 +4,21 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 
 type Alternative = {
-  name: string;
+  hmo: string;
+  planName: string;
   note: string;
 };
 
 type Recommendation = {
-  primary: string;
-  hmo: string;
-  monthlyCost: string;
+  primary: {
+    hmo: string;
+    planName: string;
+    monthlyPremium: number;
+    enrollUrl: string;
+  };
   reason: string;
   watchOut: string;
   alternatives: Alternative[];
-  enrollUrl?: string;
 };
 
 const LOADING_MESSAGES = [
@@ -119,18 +122,20 @@ export default function ResultPage() {
                   className="text-3xl font-bold text-gray-900"
                   style={{ fontFamily: "var(--font-figtree)" }}
                 >
-                  {rec.primary}
+                  {rec.primary.planName}
                 </h1>
-                <p className="text-[#1B4F8A] font-medium">{rec.hmo}</p>
+                <p className="text-[#1B4F8A] font-medium">{rec.primary.hmo}</p>
               </div>
 
               {/* Cost badge */}
               <div className="bg-blue-50 border border-blue-100 rounded-2xl px-6 py-5 flex items-center justify-between">
                 <div>
                   <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">
-                    Estimated monthly cost
+                    Estimated monthly premium
                   </p>
-                  <p className="text-2xl font-bold text-[#1B4F8A]">{rec.monthlyCost}</p>
+                  <p className="text-2xl font-bold text-[#1B4F8A]">
+                    ₦{rec.primary.monthlyPremium.toLocaleString()}/month
+                  </p>
                 </div>
                 <div className="text-4xl">🩺</div>
               </div>
@@ -169,7 +174,8 @@ export default function ResultPage() {
                         key={i}
                         className="border border-gray-200 rounded-xl px-5 py-4 space-y-1"
                       >
-                        <p className="font-medium text-gray-900">{alt.name}</p>
+                        <p className="font-medium text-gray-900">{alt.planName}</p>
+                        <p className="text-xs text-[#1B4F8A] font-medium mb-1">{alt.hmo}</p>
                         <p className="text-sm text-gray-500">{alt.note}</p>
                       </div>
                     ))}
@@ -179,9 +185,9 @@ export default function ResultPage() {
 
               {/* CTA buttons */}
               <div className="flex flex-col gap-3 pt-2">
-                {rec.enrollUrl ? (
+                {rec.primary.enrollUrl ? (
                   <a
-                    href={rec.enrollUrl}
+                    href={rec.primary.enrollUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-full text-center bg-[#E67E22] hover:bg-[#d4731f] text-white font-semibold py-4 rounded-2xl transition-colors duration-200"
