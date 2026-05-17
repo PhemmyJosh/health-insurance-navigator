@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 
 type Alternative = {
   hmo: string;
@@ -93,7 +94,7 @@ export default function ResultPage() {
       <header className="px-6 py-4 border-b border-gray-100">
         <div className="max-w-2xl mx-auto flex items-center">
           <Link href="/">
-            <img src="/logo.png" alt="laima" className="h-[35px] w-[94px] object-cover" />
+            <Image src="/logo.png" alt="laima" width={94} height={35} className="object-cover" />
           </Link>
         </div>
       </header>
@@ -257,7 +258,7 @@ function FullPageLoader() {
 
       <div className="flex flex-col items-center gap-8 max-w-sm w-full text-center">
         <Link href="/">
-          <img src="/logo.png" alt="laima" className="h-[35px] w-[94px] object-cover" />
+          <Image src="/logo.png" alt="laima" width={94} height={35} className="object-cover" />
         </Link>
 
         {/* Animated progress bar */}

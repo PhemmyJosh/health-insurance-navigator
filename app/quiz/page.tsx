@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { CaretDown } from "@phosphor-icons/react";
 import { getHospitalsByState } from "@/lib/hospitals";
 import { getCitiesByState } from "@/lib/locations";
@@ -130,7 +131,7 @@ export default function QuizPage() {
       <header className="px-6 py-4 border-b border-gray-100">
         <div className="max-w-xl mx-auto flex items-center">
           <Link href="/">
-            <img src="/logo.png" alt="laima" className="h-[35px] w-[94px] object-cover" />
+            <Image src="/logo.png" alt="laima" width={94} height={35} className="object-cover" />
           </Link>
         </div>
       </header>
@@ -581,7 +582,7 @@ function HospitalSearch({
             </button>
           ))}
           {filtered.length === 0 && (
-            <p className="px-4 py-3 text-sm text-gray-400">No hospitals found matching "{query}"</p>
+            <p className="px-4 py-3 text-sm text-gray-400">No hospitals found matching &quot;{query}&quot;</p>
           )}
           <button
             type="button"
@@ -593,7 +594,7 @@ function HospitalSearch({
               setQuery("");
             }}
           >
-            My hospital isn't listed — type name manually
+            My hospital isn&apos;t listed &mdash; type name manually
           </button>
         </div>
       )}

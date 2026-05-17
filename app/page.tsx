@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 const imgLogo = "/logo.png";
 const imgHero = "/hero.png";
@@ -10,10 +11,12 @@ export default function LandingPage() {
       <div className="pt-6 px-[142px]">
         <nav className="flex items-center justify-between h-[50px]">
           <Link href="/">
-            <img
+            <Image
               src={imgLogo}
               alt="laima"
-              className="h-[35px] w-[94px] object-cover"
+              width={94}
+              height={35}
+              className="object-cover"
             />
           </Link>
           <Link
@@ -42,7 +45,7 @@ export default function LandingPage() {
                 className="text-[64px] font-bold text-[#1a1a1a] leading-[1.1] tracking-[-1.28px]"
                 style={{ fontFamily: "var(--font-figtree)" }}
               >
-                We'll find the right health insurance for you
+                We&apos;ll find the right health insurance for you
               </h1>
               <p className="text-[18px] text-[#444] w-[350px] leading-normal">
                 No endless comparison tables. Just a plan that fits your needs.
@@ -65,10 +68,12 @@ export default function LandingPage() {
             className="relative overflow-hidden rounded-[34px] bg-[rgba(255,241,202,0.68)] shrink-0"
             style={{ width: "514px", height: "530px" }}
           >
-            <img
+            <Image
               alt=""
               src={imgHero}
-              className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none"
+              fill
+              sizes="514px"
+              className="object-cover object-center pointer-events-none"
             />
           </div>
         </div>

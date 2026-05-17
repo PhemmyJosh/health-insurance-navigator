@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
+import { GoogleGenerativeAI, SchemaType, type Schema } from "@google/generative-ai";
 import { PLANS } from "@/lib/plans";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
@@ -17,7 +17,7 @@ If a user has a condition and the plan has a waiting period, say so clearly.
 Sound like a helpful friend, not a brochure.
 Use everyday Nigerian English throughout.`;
 
-const RESPONSE_SCHEMA = {
+const RESPONSE_SCHEMA: Schema = {
   type: SchemaType.OBJECT,
   properties: {
     primary: {
@@ -117,10 +117,9 @@ export async function POST(req: NextRequest) {
     const model = genAI.getGenerativeModel({
       model: process.env.GEMINI_MODEL ?? "gemini-3.1-flash-lite",
       systemInstruction: SYSTEM_PROMPT,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       generationConfig: {
         responseMimeType: "application/json",
-        responseSchema: RESPONSE_SCHEMA as any,
+        responseSchema: RESPONSE_SCHEMA,
       },
     });
 
