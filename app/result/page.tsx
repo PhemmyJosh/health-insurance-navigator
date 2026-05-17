@@ -18,6 +18,15 @@ type Recommendation = {
   enrollUrl?: string;
 };
 
+const LOADING_MESSAGES = [
+  "Reviewing your health profile...",
+  "Checking available plans across Nigeria...",
+  "Comparing coverage options for your budget...",
+  "Matching you with the right HMO...",
+  "Checking hospital networks near you...",
+  "Almost ready — putting it all together...",
+];
+
 export default function ResultPage() {
   const [rec, setRec] = useState<Recommendation | null>(null);
   const [loading, setLoading] = useState(true);
@@ -25,19 +34,42 @@ export default function ResultPage() {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    try {
-      const stored = sessionStorage.getItem("recommendation");
-      if (!stored) {
-        setError("No recommendation found. Please retake the quiz.");
-        setLoading(false);
-        return;
+    const stored = sessionStorage.getItem("recommendation");
+    if (stored) {
+      try {
+        setRec(JSON.parse(stored));
+      } catch {
+        setError("Could not load your recommendation. Please try again.");
       }
-      setRec(JSON.parse(stored));
-    } catch {
-      setError("Could not load your recommendation. Please try again.");
-    } finally {
       setLoading(false);
+      return;
     }
+
+    const answersStr = sessionStorage.getItem("userAnswers");
+    if (!answersStr) {
+      setError("No quiz answers found. Please retake the quiz.");
+      setLoading(false);
+      return;
+    }
+
+    fetch("/api/recommend", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: answersStr,
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Request failed");
+        return res.json();
+      })
+      .then((data) => {
+        sessionStorage.setItem("recommendation", JSON.stringify(data));
+        setRec(data);
+        setLoading(false);
+      })
+      .catch(() => {
+        setError("Something went wrong. Please try again.");
+        setLoading(false);
+      });
   }, []);
 
   async function handleShare() {
@@ -50,25 +82,21 @@ export default function ResultPage() {
     }
   }
 
+  if (loading) return <FullPageLoader />;
+
   return (
     <main className="min-h-screen bg-white flex flex-col">
       {/* Nav */}
       <header className="px-6 py-4 border-b border-gray-100">
-        <div className="max-w-2xl mx-auto flex items-center justify-between">
-          <img src="/logo.png" alt="laima" className="h-[35px] w-[94px] object-cover" />
-          <Link
-            href="/quiz"
-            className="inline-flex items-center justify-center bg-[#e8603c] text-white text-[14px] px-5 py-2 rounded-[48px]"
-          >
-            Get Started
+        <div className="max-w-2xl mx-auto flex items-center">
+          <Link href="/">
+            <img src="/logo.png" alt="laima" className="h-[35px] w-[94px] object-cover" />
           </Link>
         </div>
       </header>
 
       <section className="flex-1 px-6 py-10">
         <div className="max-w-2xl mx-auto space-y-6">
-          {loading && <LoadingState />}
-
           {error && (
             <div className="text-center space-y-4 py-16">
               <p className="text-red-500">{error}</p>
@@ -81,13 +109,18 @@ export default function ResultPage() {
             </div>
           )}
 
-          {!loading && !error && rec && (
+          {!error && rec && (
             <>
               <div className="text-center space-y-1 pb-2">
                 <p className="text-sm font-medium uppercase tracking-widest text-[#E67E22]">
                   Your recommended plan
                 </p>
-                <h1 className="text-3xl font-bold text-gray-900" style={{ fontFamily: "var(--font-figtree)" }}>{rec.primary}</h1>
+                <h1
+                  className="text-3xl font-bold text-gray-900"
+                  style={{ fontFamily: "var(--font-figtree)" }}
+                >
+                  {rec.primary}
+                </h1>
                 <p className="text-[#1B4F8A] font-medium">{rec.hmo}</p>
               </div>
 
@@ -104,7 +137,12 @@ export default function ResultPage() {
 
               {/* Reason */}
               <div className="space-y-2">
-                <h2 className="font-semibold text-gray-800" style={{ fontFamily: "var(--font-figtree)" }}>Why this plan fits you</h2>
+                <h2
+                  className="font-semibold text-gray-800"
+                  style={{ fontFamily: "var(--font-figtree)" }}
+                >
+                  Why this plan fits you
+                </h2>
                 <p className="text-gray-600 leading-relaxed">{rec.reason}</p>
               </div>
 
@@ -119,7 +157,12 @@ export default function ResultPage() {
               {/* Alternatives */}
               {rec.alternatives && rec.alternatives.length > 0 && (
                 <div className="space-y-3">
-                  <h2 className="font-semibold text-gray-800" style={{ fontFamily: "var(--font-figtree)" }}>Also worth considering</h2>
+                  <h2
+                    className="font-semibold text-gray-800"
+                    style={{ fontFamily: "var(--font-figtree)" }}
+                  >
+                    Also worth considering
+                  </h2>
                   <div className="flex flex-col gap-3">
                     {rec.alternatives.map((alt, i) => (
                       <div
@@ -183,18 +226,54 @@ export default function ResultPage() {
   );
 }
 
-function LoadingState() {
+function FullPageLoader() {
+  const [msgIndex, setMsgIndex] = useState(0);
+
+  useEffect(() => {
+    const id = setInterval(
+      () => setMsgIndex((i) => (i + 1) % LOADING_MESSAGES.length),
+      2500
+    );
+    return () => clearInterval(id);
+  }, []);
+
   return (
-    <div className="flex flex-col items-center justify-center py-24 space-y-5 text-center">
-      <div className="relative w-16 h-16">
-        <div className="absolute inset-0 rounded-full border-4 border-blue-100"></div>
-        <div className="absolute inset-0 rounded-full border-4 border-t-[#1B4F8A] animate-spin"></div>
-      </div>
-      <div className="space-y-1">
-        <p className="font-semibold text-gray-800">Analysing your profile…</p>
-        <p className="text-sm text-gray-400">
-          Matching you with the best plans available in your state.
-        </p>
+    <div className="min-h-screen bg-white flex flex-col items-center justify-center px-6">
+      <style>{`
+        @keyframes loader-slide {
+          0%   { left: -40%; }
+          100% { left: 110%; }
+        }
+        .loader-bar-inner {
+          animation: loader-slide 1.6s ease-in-out infinite;
+        }
+      `}</style>
+
+      <div className="flex flex-col items-center gap-8 max-w-sm w-full text-center">
+        <Link href="/">
+          <img src="/logo.png" alt="laima" className="h-[35px] w-[94px] object-cover" />
+        </Link>
+
+        {/* Animated progress bar */}
+        <div className="w-full h-1 bg-gray-100 rounded-full overflow-hidden relative">
+          <div className="loader-bar-inner absolute h-full w-2/5 bg-[#0f766e] rounded-full" />
+        </div>
+
+        {/* Cycling message */}
+        <div className="flex flex-col items-center gap-3">
+          <div className="flex items-center gap-2 justify-center">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#e8603c] animate-pulse shrink-0" />
+            <p
+              className="text-[18px] font-bold text-[#1a1a1a]"
+              style={{ fontFamily: "var(--font-figtree)" }}
+            >
+              {LOADING_MESSAGES[msgIndex]}
+            </p>
+          </div>
+          <p className="text-[14px] text-[#888888]">
+            This usually takes less than 10 seconds
+          </p>
+        </div>
       </div>
     </div>
   );

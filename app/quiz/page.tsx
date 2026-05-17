@@ -12,12 +12,23 @@ const NIGERIAN_STATES = [
   "Osun", "Oyo", "Plateau", "Rivers", "Sokoto", "Taraba", "Yobe", "Zamfara",
 ];
 
+const CONTEXTUAL_MESSAGES = [
+  null, // index 0 unused
+  { headline: "Let's find your plan", subtext: "Answer a few quick questions and we'll match you to the right health insurance plan for your situation." },
+  { message: "Good start — a few more things to know" },
+  { message: "You're doing great" },
+  { message: "Almost there" },
+  { message: "This one is important" },
+  { message: "Nearly done" },
+  { message: "Last one — we promise" },
+];
+
 type Answers = {
   age: string;
   state: string;
   coverage: string;
   budget: string;
-  conditions: string;
+  conditions: string[];
   conditionsOther: string;
   preferredHospital: string;
   priority: string;
@@ -33,16 +44,30 @@ export default function QuizPage() {
     state: "",
     coverage: "",
     budget: "",
-    conditions: "",
+    conditions: [],
     conditionsOther: "",
     preferredHospital: "",
     priority: "",
   });
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  function update(field: keyof Answers, value: string) {
-    setAnswers((prev) => ({ ...prev, [field]: value }));
+  function update(field: Exclude<keyof Answers, "conditions">, value: string) {
+    setAnswers((prev) => ({ ...prev, [field]: value } as Answers));
+    setError("");
+  }
+
+  function toggleCondition(value: string) {
+    setAnswers((prev) => {
+      const current = prev.conditions;
+      if (value === "none") {
+        return { ...prev, conditions: current.includes("none") ? [] : ["none"] };
+      }
+      const without = current.filter((c) => c !== "none" && c !== value);
+      if (current.includes(value)) {
+        return { ...prev, conditions: without };
+      }
+      return { ...prev, conditions: [...without, value] };
+    });
     setError("");
   }
 
@@ -52,8 +77,8 @@ export default function QuizPage() {
       case 2: return answers.state !== "";
       case 3: return answers.coverage !== "";
       case 4: return answers.budget !== "";
-      case 5: return answers.conditions !== "";
-      case 6: return true; // optional
+      case 5: return answers.conditions.length > 0;
+      case 6: return true;
       case 7: return answers.priority !== "";
       default: return false;
     }
@@ -67,29 +92,18 @@ export default function QuizPage() {
     setStep((s) => s + 1);
   }
 
-  async function handleSubmit() {
+  function handleSubmit() {
     if (!canAdvance()) {
       setError("Please answer this question to continue.");
       return;
     }
-    setLoading(true);
-    setError("");
-    try {
-      const res = await fetch("/api/recommend", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(answers),
-      });
-      if (!res.ok) throw new Error("Request failed");
-      const data = await res.json();
-      // Pass recommendation via sessionStorage to avoid long query strings
-      sessionStorage.setItem("recommendation", JSON.stringify(data));
-      sessionStorage.setItem("userAnswers", JSON.stringify(answers));
-      router.push("/result");
-    } catch {
-      setError("Something went wrong. Please try again.");
-      setLoading(false);
-    }
+    const submissionData = {
+      ...answers,
+      conditions: answers.conditions.join(", ") || "none",
+    };
+    sessionStorage.removeItem("recommendation");
+    sessionStorage.setItem("userAnswers", JSON.stringify(submissionData));
+    router.push("/result");
   }
 
   const progress = Math.round((step / TOTAL_STEPS) * 100);
@@ -98,13 +112,9 @@ export default function QuizPage() {
     <main className="min-h-screen flex flex-col bg-white">
       {/* Nav */}
       <header className="px-6 py-4 border-b border-gray-100">
-        <div className="max-w-xl mx-auto flex items-center justify-between">
-          <img src="/logo.png" alt="laima" className="h-[35px] w-[94px] object-cover" />
-          <Link
-            href="/quiz"
-            className="inline-flex items-center justify-center bg-[#e8603c] text-white text-[14px] px-5 py-2 rounded-[48px]"
-          >
-            Get Started
+        <div className="max-w-xl mx-auto flex items-center">
+          <Link href="/">
+            <img src="/logo.png" alt="laima" className="h-[35px] w-[94px] object-cover" />
           </Link>
         </div>
       </header>
@@ -112,7 +122,7 @@ export default function QuizPage() {
       {/* Progress bar */}
       <div className="h-1 bg-gray-100">
         <div
-          className="h-1 bg-[#1B4F8A] transition-all duration-500"
+          className="h-1 bg-[#0f766e] transition-all duration-500"
           style={{ width: `${progress}%` }}
         />
       </div>
@@ -124,6 +134,7 @@ export default function QuizPage() {
             step={step}
             answers={answers}
             update={update}
+            toggleCondition={toggleCondition}
             error={error}
           />
 
@@ -132,17 +143,16 @@ export default function QuizPage() {
             {step < TOTAL_STEPS ? (
               <button
                 onClick={handleNext}
-                className="w-full bg-[#1B4F8A] hover:bg-[#163f6e] text-white font-semibold py-4 rounded-2xl transition-colors duration-200 active:scale-95"
+                className="w-full bg-[#e8603c] hover:bg-[#d4501f] text-white font-semibold py-4 rounded-full transition-colors duration-200 active:scale-95"
               >
                 Next
               </button>
             ) : (
               <button
                 onClick={handleSubmit}
-                disabled={loading}
-                className="w-full bg-[#E67E22] hover:bg-[#d4731f] disabled:opacity-60 text-white font-semibold py-4 rounded-2xl transition-colors duration-200 active:scale-95"
+                className="w-full bg-[#e8603c] hover:bg-[#d4501f] text-white font-semibold py-4 rounded-full transition-colors duration-200 active:scale-95"
               >
-                {loading ? "Getting your recommendation…" : "Get My Recommendation"}
+                Get My Recommendation
               </button>
             )}
           </div>
@@ -165,15 +175,42 @@ function StepContent({
   step,
   answers,
   update,
+  toggleCondition,
   error,
 }: {
   step: number;
   answers: Answers;
-  update: (field: keyof Answers, value: string) => void;
+  update: (field: Exclude<keyof Answers, "conditions">, value: string) => void;
+  toggleCondition: (value: string) => void;
   error: string;
 }) {
+  const ctx = CONTEXTUAL_MESSAGES[step];
+
   return (
     <div className="space-y-6">
+      {/* Contextual message */}
+      {ctx && (
+        <div className="space-y-2">
+          {"headline" in ctx ? (
+            <>
+              <h1
+                className="text-3xl font-bold text-[#1a1a1a]"
+                style={{ fontFamily: "var(--font-figtree)" }}
+              >
+                {ctx.headline}
+              </h1>
+              <p className="text-[15px] text-[#555] leading-relaxed">
+                {ctx.subtext}
+              </p>
+            </>
+          ) : (
+            <p className="text-[15px] font-medium text-[#1a1a1a]">
+              {ctx.message}
+            </p>
+          )}
+        </div>
+      )}
+
       {step === 1 && (
         <Question label="How old are you?">
           <input
@@ -183,7 +220,7 @@ function StepContent({
             value={answers.age}
             onChange={(e) => update("age", e.target.value)}
             placeholder="e.g. 32"
-            className="w-full border-2 border-gray-200 focus:border-[#1B4F8A] rounded-xl px-4 py-3 text-lg outline-none transition-colors"
+            className="w-full border-2 border-gray-200 focus:border-[#e8603c] rounded-xl px-4 py-3 text-lg outline-none transition-colors"
           />
         </Question>
       )}
@@ -193,7 +230,7 @@ function StepContent({
           <select
             value={answers.state}
             onChange={(e) => update("state", e.target.value)}
-            className="w-full border-2 border-gray-200 focus:border-[#1B4F8A] rounded-xl px-4 py-3 text-lg outline-none bg-white transition-colors"
+            className="w-full border-2 border-gray-200 focus:border-[#e8603c] rounded-xl px-4 py-3 text-lg outline-none bg-white transition-colors"
           >
             <option value="">Select your state</option>
             {NIGERIAN_STATES.map((s) => (
@@ -234,24 +271,30 @@ function StepContent({
 
       {step === 5 && (
         <Question label="Do you have any existing health conditions?">
-          <OptionGroup
+          <p className="text-sm text-gray-400 -mt-1">Select all that apply.</p>
+          <MultiOptionGroup
             options={[
               { value: "none", label: "None" },
               { value: "hypertension", label: "Hypertension" },
               { value: "diabetes", label: "Diabetes" },
               { value: "asthma", label: "Asthma" },
+              { value: "sickle_cell", label: "Sickle Cell" },
+              { value: "kidney_disease", label: "Kidney Disease" },
+              { value: "heart_condition", label: "Heart Condition" },
+              { value: "cancer", label: "Cancer" },
+              { value: "hiv", label: "HIV" },
               { value: "other", label: "Other" },
             ]}
             selected={answers.conditions}
-            onSelect={(v) => update("conditions", v)}
+            onToggle={toggleCondition}
           />
-          {answers.conditions === "other" && (
+          {answers.conditions.includes("other") && (
             <input
               type="text"
               value={answers.conditionsOther}
               onChange={(e) => update("conditionsOther", e.target.value)}
               placeholder="Please describe your condition"
-              className="mt-3 w-full border-2 border-gray-200 focus:border-[#1B4F8A] rounded-xl px-4 py-3 outline-none transition-colors"
+              className="mt-3 w-full border-2 border-gray-200 focus:border-[#e8603c] rounded-xl px-4 py-3 outline-none transition-colors"
             />
           )}
         </Question>
@@ -267,7 +310,7 @@ function StepContent({
             value={answers.preferredHospital}
             onChange={(e) => update("preferredHospital", e.target.value)}
             placeholder="e.g. Lagos Island General Hospital"
-            className="w-full border-2 border-gray-200 focus:border-[#1B4F8A] rounded-xl px-4 py-3 text-lg outline-none transition-colors"
+            className="w-full border-2 border-gray-200 focus:border-[#e8603c] rounded-xl px-4 py-3 text-lg outline-none transition-colors"
           />
         </Question>
       )}
@@ -305,7 +348,12 @@ function Question({
 }) {
   return (
     <div className="space-y-3">
-      <h2 className="text-2xl font-bold text-gray-900 leading-snug" style={{ fontFamily: "var(--font-figtree)" }}>{label}</h2>
+      <h2
+        className="text-2xl font-bold text-gray-900 leading-snug"
+        style={{ fontFamily: "var(--font-figtree)" }}
+      >
+        {label}
+      </h2>
       {hint && <p className="text-sm text-gray-400">{hint}</p>}
       {children}
     </div>
@@ -329,16 +377,46 @@ function OptionGroup({
           onClick={() => onSelect(value)}
           className={`w-full text-left px-5 py-4 rounded-xl border-2 font-medium transition-all duration-150 ${
             selected === value
-              ? "border-[#1B4F8A] bg-blue-50 text-[#1B4F8A]"
+              ? "border-[#e8603c] bg-[#fff1ec] text-[#e8603c]"
               : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
           }`}
         >
-          {selected === value && (
-            <span className="mr-2 text-[#1B4F8A]">✓</span>
-          )}
+          {selected === value && <span className="mr-2 text-[#e8603c]">✓</span>}
           {label}
         </button>
       ))}
+    </div>
+  );
+}
+
+function MultiOptionGroup({
+  options,
+  selected,
+  onToggle,
+}: {
+  options: { value: string; label: string }[];
+  selected: string[];
+  onToggle: (value: string) => void;
+}) {
+  return (
+    <div className="flex flex-col gap-3">
+      {options.map(({ value, label }) => {
+        const isSelected = selected.includes(value);
+        return (
+          <button
+            key={value}
+            onClick={() => onToggle(value)}
+            className={`w-full text-left px-5 py-4 rounded-xl border-2 font-medium transition-all duration-150 ${
+              isSelected
+                ? "border-[#e8603c] bg-[#fff1ec] text-[#e8603c]"
+                : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
+            }`}
+          >
+            {isSelected && <span className="mr-2 text-[#e8603c]">✓</span>}
+            {label}
+          </button>
+        );
+      })}
     </div>
   );
 }
