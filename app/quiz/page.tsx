@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { CaretDown } from "@phosphor-icons/react";
 
 const NIGERIAN_STATES = [
   "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa", "Benue",
@@ -227,16 +228,23 @@ function StepContent({
 
       {step === 2 && (
         <Question label="Which state are you in?">
-          <select
-            value={answers.state}
-            onChange={(e) => update("state", e.target.value)}
-            className="w-full border-2 border-gray-200 focus:border-[#e8603c] rounded-xl px-4 py-3 text-lg outline-none bg-white transition-colors"
-          >
-            <option value="">Select your state</option>
-            {NIGERIAN_STATES.map((s) => (
-              <option key={s} value={s}>{s}</option>
-            ))}
-          </select>
+          <div className="relative">
+            <select
+              value={answers.state}
+              onChange={(e) => update("state", e.target.value)}
+              className="w-full appearance-none border-2 border-gray-200 focus:border-[#e8603c] rounded-xl pl-4 pr-12 py-3 text-lg outline-none bg-white transition-colors"
+            >
+              <option value="">Select your state</option>
+              {NIGERIAN_STATES.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+            <CaretDown
+              size={20}
+              color="#888888"
+              className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none"
+            />
+          </div>
         </Question>
       )}
 
