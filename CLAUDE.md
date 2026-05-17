@@ -1,10 +1,13 @@
-# Health Insurance Navigator Nigeria — Project Guide
+# Laima — Health Insurance Navigator Nigeria
 
 ## What this project is
 
-A solo side project. A user answers 7 short questions about their health profile and budget. The app sends their answers to the Anthropic Claude API. Claude returns a personalised health insurance plan recommendation in plain English. The recommendation is shown on a clean result screen with a share option.
+A solo side project branded **Laima**. A user answers 7 questions about their health profile and budget. The app sends their answers to the Google Gemini API. Gemini selects the best match from a curated list of Nigerian HMO plans and returns a personalised recommendation in plain English. The recommendation is shown on a result screen with enrolment and share options.
 
 No database. No authentication. No scope beyond what is described here.
+
+**Live URL:** [trylaima.vercel.app](https://trylaima.vercel.app)
+Auto-deploys from the `master` branch via Vercel.
 
 ---
 
@@ -12,41 +15,49 @@ No database. No authentication. No scope beyond what is described here.
 
 | Layer | Choice |
 |---|---|
-| Framework | Next.js 15 (App Router) |
+| Framework | Next.js 15.5.18 (App Router) |
 | Language | TypeScript (strict mode) |
 | Styling | Tailwind CSS v3 |
-| AI | Anthropic SDK (`@anthropic-ai/sdk`) |
-| Deploy target | Vercel |
-| Node version | 26.x (installed via winget) |
+| AI | Google Gemini API via `@google/generative-ai` |
+| Model | `gemini-3.1-flash-lite` |
+| Icons | Phosphor Icons (`@phosphor-icons/react`) |
+| Deploy | Vercel (auto-deploy from GitHub) |
+| Node | 26.x |
 
 ---
 
-## Design rules
+## Design system
 
 **Colour palette**
 
 | Token | Hex | Usage |
 |---|---|---|
-| Brand blue | `#1B4F8A` | Primary actions, headings, links, progress bar |
-| Brand orange | `#E67E22` | CTA buttons, accent highlights, logo dot |
-| White | `#ffffff` | Page backgrounds |
-| Gray-50 | `#f9fafb` | Section backgrounds (how-it-works strip) |
-| Gray-200 | `#e5e7eb` | Input borders (unselected) |
-| Amber-50 | `#fffbeb` | Watch-out callout background |
+| Coral | `#E8603C` | Primary CTA buttons, selected states, active pill |
+| Teal | `#0F766E` | Progress bar, trust badge border, green dot |
+| Teal light | `#EBFFFD` | Trust badge background |
+| Near-black | `#1A1A1A` | All headlines (Figtree) |
+| Body grey | `#444444` | Body copy |
+| Warm white | `#FCFCFC` | Landing page background |
+| Amber-50 | `#FFFBEB` | Watch-out callout background |
+| Coral light | `#FDF3F0` | Selected tile / option background |
+| Input border | `#E5E5E5` | Unselected condition tile border |
 
 **Typography**
-- Font: Inter (loaded from Google Fonts in `globals.css`)
-- Fallback: `system-ui, sans-serif`
+
+| Font | Weight | Usage |
+|---|---|---|
+| Figtree | 700 (Bold) | All `h1`, `h2` headlines |
+| Manrope | 400 / 500 / 600 / 700 | Body text, labels, buttons, captions |
+
+Both loaded via `next/font/google` in `app/layout.tsx` as CSS variables `--font-figtree` and `--font-manrope`. Applied globally via `body` className.
 
 **Layout**
-- Mobile-first. Max content width `max-w-xl` (quiz, result) or `max-w-2xl` (landing).
-- All pages use the same header pattern: logo left, contextual label right.
-- Rounded corners: inputs and cards use `rounded-xl` or `rounded-2xl`.
-- Buttons: `rounded-2xl`, `py-4`, full-width on mobile.
-
-**Tone**
-- Warm, direct, plain English. Nigerian context. Not corporate.
-- No insurance jargon in user-facing copy or in Claude's response prompt.
+- Landing: full-width two-column hero, max content width `max-w-2xl`.
+- Quiz / Result: centred single column, `max-w-xl`.
+- Logo: `laima` image from `/public/logo.png` (94×35px), linked to `/`.
+- Nav buttons: `rounded-[48px]` pill shape.
+- Quiz option buttons: `rounded-xl`, coral selected state.
+- Progress bar: `#0F766E` teal, transitions on step advance.
 
 ---
 
@@ -55,24 +66,29 @@ No database. No authentication. No scope beyond what is described here.
 ```
 health-insurance-navigator/
 ├── app/
-│   ├── globals.css              # Tailwind directives + Inter font import
-│   ├── layout.tsx               # Root layout, <html>, metadata
-│   ├── page.tsx                 # / — Landing page
+│   ├── globals.css              # @import (Google Fonts) must precede @tailwind directives
+│   ├── layout.tsx               # Root layout — fonts, metadata, body className
+│   ├── page.tsx                 # / — Landing page (Figma-matched design)
 │   ├── quiz/
-│   │   └── page.tsx             # /quiz — 7-question onboarding flow
+│   │   └── page.tsx             # /quiz — 7-step quiz flow
 │   ├── result/
-│   │   └── page.tsx             # /result — Recommendation display screen
+│   │   └── page.tsx             # /result — Recommendation display + full-page loader
 │   └── api/
 │       └── recommend/
-│           └── route.ts         # POST /api/recommend — calls Claude
+│           └── route.ts         # POST /api/recommend — Gemini API call
+├── lib/
+│   ├── plans.ts                 # 5 HMO placeholder plans (NEEDS real data)
+│   ├── hospitals.ts             # 455 Nigerian hospitals across all 37 states
+│   └── locations.ts             # All 36 states + FCT with major cities/areas
+├── public/
+│   ├── logo.png                 # Laima brand logo (downloaded from Figma)
+│   └── hero.png                 # Hero image — woman with umbrella (from Figma)
 ├── package.json
 ├── tsconfig.json
 ├── tailwind.config.ts
 ├── next.config.ts
-├── postcss.config.mjs
-├── eslint.config.mjs
-├── .env.local.example           # Copy to .env.local and add API key
-├── .gitignore
+├── .env.local                   # Gitignored — contains GEMINI_API_KEY
+├── .env.local.example           # Template for env vars
 └── CLAUDE.md                    # This file
 ```
 
@@ -81,115 +97,201 @@ health-insurance-navigator/
 ## Pages
 
 ### `/` — Landing page (`app/page.tsx`)
-- Headline: "Find the right health insurance plan for you"
-- Subheadline + trust badge ("Free · No registration required")
-- CTA button → `/quiz`
-- "How it works" 3-step strip
-- Footer disclaimer
 
-### `/quiz` — Quiz (`app/quiz/page.tsx`)
-- Client component (`"use client"`)
-- One question displayed at a time. Progress bar fills as steps advance.
-- Answers held in local React state (`useState<Answers>`)
-- On the final question, "Get My Recommendation" submits
+Rebuilt from a Figma frame (node `17-131`). Two-column desktop layout:
 
-**The 7 questions:**
+**Left column:**
+- Teal trust badge: "Free · No registration required"
+- Hero headline: "We'll find the right health insurance for you" (Figtree 64px)
+- Subtext: "No endless comparison tables. Just a plan that fits your needs."
+- Coral CTA: "Find My Plan" → `/quiz`
 
-| Step | Field | Type |
-|---|---|---|
-| 1 | `age` | Number input |
-| 2 | `state` | Dropdown — all 36 states + FCT |
-| 3 | `coverage` | Option group: `individual` / `couple` / `family` |
-| 4 | `budget` | Option group: `under_5k` / `5k_10k` / `10k_20k` / `above_20k` |
-| 5 | `conditions` | Option group: `none` / `hypertension` / `diabetes` / `asthma` / `other` + text input if `other` |
-| 6 | `preferredHospital` | Text input (optional) |
-| 7 | `priority` | Option group: `routine` / `hospitalisation` / `maternity` / `emergency` |
+**Right column:**
+- Warm-yellow rounded card (`rgba(255,241,202,0.68)`, `rounded-[34px]`)
+- Hero photo (woman with umbrella) fills card via `object-cover`
+
+**Nav:**
+- Laima logo (left, linked to `/`)
+- "Get Started" coral pill button (right) → `/quiz`
+
+**Footer:** "Not affiliated with any HMO. © 2026"
+
+---
+
+### `/quiz` — Quiz flow (`app/quiz/page.tsx`)
+
+Client component. One question per screen. Teal progress bar fills as steps advance. Context message shown above every question.
+
+**Question order:**
+
+| Step | Field | Type | Notes |
+|---|---|---|---|
+| 1 | `age` | Number input | — |
+| 2 | `coverage` | Single-select options | individual / couple / family |
+| 3 | `state` + `city` | Two dropdowns side by side | City disabled until state selected; city required for individual, optional for family |
+| 4 | `budget` | Single-select options | under_5k / 5k_10k / 10k_20k / above_20k |
+| 5 | `conditions` | **Multi-select tile grid** (3 per row) | 10 options; "Other" spans full width + reveals text input |
+| 6 | `preferredHospital` | Autocomplete search | Filters `lib/hospitals.ts` by state; shows pill on selection; manual fallback |
+| 7 | `priority` | Single-select options | routine / hospitalisation / maternity / emergency |
+
+**Contextual messages per step:**
+- Step 1: "Let's find your plan" headline + subtext
+- Steps 2–7: short warm message above the question (see `CONTEXTUAL_MESSAGES` in quiz page)
+
+**Navigation buttons:**
+- "Next" / "Get My Recommendation" — coral, `rounded-full`, full width
+- "← Back" — ghost text link
 
 **Submission flow:**
-1. POST answers to `/api/recommend`
-2. Store response in `sessionStorage` under key `"recommendation"`
-3. Store answers in `sessionStorage` under key `"userAnswers"`
-4. `router.push("/result")`
+1. Serialize answers (`conditions` array → comma-separated string)
+2. Clear stale `recommendation` from sessionStorage
+3. Save `userAnswers` to sessionStorage
+4. `router.push("/result")` — API call happens on the result page
+
+---
 
 ### `/result` — Result screen (`app/result/page.tsx`)
-- Client component (`"use client"`)
-- On mount, reads `sessionStorage.getItem("recommendation")` and parses JSON
-- Shows a spinner while `loading === true`
-- Displays the structured recommendation once loaded
 
-**Result card structure:**
-- Plan name + HMO name
-- Monthly cost badge
-- "Why this plan fits you" (plain English, 3–4 sentences)
-- "One thing to watch out for" (amber callout)
-- "Also worth considering" — two alternatives
-- "Enroll Now" button (links to `enrollUrl` if provided by Claude)
-- "Share My Result" button — copies `window.location.href` to clipboard
-- "Start Over" link → `/quiz`
+Client component. On mount: checks sessionStorage for a cached recommendation, or calls `/api/recommend` with saved answers.
 
-### `POST /api/recommend` — API route (`app/api/recommend/route.ts`)
-- Receives `UserProfile` JSON from the quiz
-- Builds a prompt using `buildPrompt(profile)`
-- Calls `claude-sonnet-4-6` with `max_tokens: 1024`
-- Strips any accidental markdown fences from the response
-- Parses the response as JSON and returns it
+**Full-page loader** (shown while API call is in progress):
+- Laima logo centered
+- Animated teal sliding progress bar
+- Pulsing coral dot + cycling message (6 messages, 2.5s interval, Figtree bold)
+- "This usually takes less than 10 seconds" (Manrope, `#888888`)
 
-**Response shape Claude is prompted to return:**
+**Result card** (once loaded):
+- "Your recommended plan" label
+- Plan name (`h1`, Figtree)
+- HMO name
+- Monthly premium badge (teal background)
+- "Why this plan fits you" section
+- Amber "One thing to watch out for" callout
+- "Also worth considering" — two alternatives (plan name + HMO + note)
+- "Enroll Now" button (links to `enrollUrl`)
+- "Share My Result" — copies URL to clipboard
+- "Start Over" → `/quiz`
+
+> **Next session:** Result page needs visual redesign in Figma before rework.
+
+---
+
+### `POST /api/recommend` (`app/api/recommend/route.ts`)
+
+Receives `UserProfile` JSON, calls Gemini with structured JSON output enforced via `responseSchema`.
+
+**Model:** `process.env.GEMINI_MODEL` (default: `gemini-3.1-flash-lite`)
+
+**System prompt:** Honest Nigerian health insurance advisor. Warm, plain English. Always surfaces limitations and VERIFY flags.
+
+**User prompt:** Profile fields + full `PLANS` array from `lib/plans.ts` as JSON.
+
+**Response schema (enforced by Gemini):**
 ```ts
 {
-  primary: string        // Plan name
-  hmo: string            // HMO name
-  monthlyCost: string    // e.g. "₦8,000 – ₦12,000"
-  reason: string         // 3–4 sentence plain English explanation
-  watchOut: string       // One limitation to verify
-  alternatives: [        // Two alternatives
-    { name: string, note: string },
-    { name: string, note: string }
+  primary: {
+    hmo: string
+    planName: string
+    monthlyPremium: number
+    enrollUrl: string
+  }
+  reason: string       // 3–4 sentence plain English
+  watchOut: string     // One limitation to verify
+  alternatives: [
+    { hmo: string, planName: string, note: string },
+    { hmo: string, planName: string, note: string }
   ]
-  enrollUrl: string | null  // Direct enroll link or null
 }
 ```
 
 ---
 
+## Data files
+
+### `lib/plans.ts` — HMO plans (PLACEHOLDER)
+
+Five plans covering the full budget spectrum. **All pricing and coverage details are placeholders — must be replaced with verified data before launch.**
+
+| ID | HMO | Plan | Tier | Monthly |
+|---|---|---|---|---|
+| `bastion_jade` | Bastion HMO | Jade | budget | ₦1,958 (₦23,500/yr) |
+| `reliance_classic` | Reliance HMO | Classic | mid | ₦6,500 |
+| `avon_plus` | Avon HMO | Avon Plus | mid | ₦11,000 |
+| `hygeia_coreplus` | Hygeia HMO | HygeiaCorePlus | upper-mid | ₦18,500 |
+| `axa_gold` | AXA Mansard Health | Gold Health | premium | ₦32,000 |
+
+Each plan has: `statesCovered`, `keyHospitals`, `outpatientCover`, `inpatientCover`, `maternityCover`, `chronicConditionPolicy`, `preExistingWaitingPeriodMonths`, `topFor`, `enrollUrl`.
+
+### `lib/hospitals.ts`
+
+455 Nigerian hospitals across all 36 states + FCT. Types: `federal` | `state` | `private` | `mission`.
+
+Exports: `HOSPITALS`, `getHospitalsByState(state)`, `getHospitalsByCity(state, city)`, `getCitiesByState(state)`
+
+### `lib/locations.ts`
+
+All 36 states + FCT with 8–16 major cities/areas each.
+
+Exports: `LOCATIONS`, `getCitiesByState(state)`
+
+---
+
 ## Environment variables
 
-| Variable | Where | Purpose |
-|---|---|---|
-| `ANTHROPIC_API_KEY` | `.env.local` | Anthropic API key — never commit this |
+| Variable | Purpose |
+|---|---|
+| `GEMINI_API_KEY` | Google Gemini API key — never commit |
+| `GEMINI_MODEL` | Model name (default: `gemini-3.1-flash-lite`) |
 
-`.env.local.example` exists in the repo root as a template.
+```bash
+cp .env.local.example .env.local
+# Add your GEMINI_API_KEY to .env.local
+```
+
+Add `GEMINI_API_KEY` and `GEMINI_MODEL` in Vercel project settings → Environment Variables.
 
 ---
 
-## State handoff between quiz and result
-
-Answers and recommendation travel via `sessionStorage`, not query strings or a database. This is intentional — simple, ephemeral, no infra required.
+## State handoff: quiz → result
 
 ```
-quiz page  →  POST /api/recommend  →  sessionStorage  →  result page
+quiz page
+  → saves userAnswers to sessionStorage
+  → router.push("/result")
+     → result page reads userAnswers
+     → POST /api/recommend
+     → saves recommendation to sessionStorage
+     → renders result card
 ```
+
+Answers and recommendations are ephemeral (sessionStorage). No database, no persistence across tabs or sessions.
 
 ---
 
-## Current status (as of scaffold)
+## Current status
 
-- [x] Project scaffolded — all pages, API route, config files created
-- [x] Node.js 26.1.0 installed via winget
-- [ ] `npm install` not yet run
-- [ ] `npm run dev` not yet run
-- [ ] `.env.local` not yet created (copy `.env.local.example`)
-- [ ] Anthropic API key not yet configured
-- [ ] Real plan data / HMO reference list not yet added to the prompt
-- [ ] API prompt not yet tuned or tested
+- [x] Laima branding — logo, coral/teal palette, Figtree/Manrope fonts
+- [x] Landing page rebuilt from Figma design (node 17-131)
+- [x] Consistent navbar across all pages (logo only on quiz/result)
+- [x] Quiz — 7 questions in correct order with contextual messages
+- [x] Location step — state + city side by side, city disabled until state selected
+- [x] Conditions step — 10-option tile grid, multi-select, "Other" free text
+- [x] Hospital step — autocomplete from 455-hospital dataset, pill on select, manual fallback
+- [x] Full-page recommendation loader with cycling messages
+- [x] Gemini 3.1 Flash Lite API connected with structured JSON output
+- [x] Five HMO placeholder plans in `lib/plans.ts`
+- [x] 455 hospitals in `lib/hospitals.ts`
+- [x] Cities/areas for all 37 jurisdictions in `lib/locations.ts`
+- [x] Next.js upgraded to 15.5.18 (security fix)
+- [x] ESLint clean — all entities escaped, `<img>` → `<Image>`
+- [x] Live on Vercel at **trylaima.vercel.app**
+- [x] Auto-deploys on push to `master`
 
-**Next steps:**
-1. Open a new terminal (so PATH picks up Node)
-2. `npm install`
-3. Copy `.env.local.example` → `.env.local`, add API key
-4. `npm run dev` — verify pages render at `http://localhost:3000`
-5. Test the full quiz → result flow end to end
-6. Refine the prompt in `app/api/recommend/route.ts` with real plan data
+**Pending — next session:**
+- [ ] Result page visual redesign (Figma design pending)
+- [ ] Replace placeholder HMO data with verified plans and pricing
+- [ ] Real hospital network data per HMO plan
+- [ ] Mobile responsiveness pass on landing page (currently desktop-optimised)
 
 ---
 
@@ -199,7 +301,6 @@ quiz page  →  POST /api/recommend  →  sessionStorage  →  result page
 - No authentication (no NextAuth, no Clerk, no sessions)
 - No additional pages beyond `/`, `/quiz`, `/result`
 - No additional npm packages without a clear reason
-- No feature flags, A/B tests, or analytics (for now)
 
 ---
 
@@ -207,12 +308,6 @@ quiz page  →  POST /api/recommend  →  sessionStorage  →  result page
 
 ```
 type: short description in imperative mood
-
-Examples:
-feat: add quiz progress bar animation
-fix: handle empty preferredHospital in prompt builder
-style: tighten result card spacing on mobile
-chore: add ANTHROPIC_API_KEY to env example
 ```
 
 Types: `feat`, `fix`, `style`, `refactor`, `chore`, `docs`
@@ -222,20 +317,20 @@ Types: `feat`, `fix`, `style`, `refactor`, `chore`, `docs`
 ## Running locally
 
 ```bash
-# First time
 npm install
 cp .env.local.example .env.local
-# (edit .env.local — add your ANTHROPIC_API_KEY)
+# Add GEMINI_API_KEY to .env.local
 npm run dev
 ```
 
-App runs at `http://localhost:3000`.
+App runs at `http://localhost:3000` (or 3001 if 3000 is in use).
 
 ---
 
 ## Deploying to Vercel
 
-1. Push repo to GitHub
-2. Import project in Vercel dashboard
-3. Add `ANTHROPIC_API_KEY` as an environment variable in Vercel project settings
-4. Deploy — Vercel auto-detects Next.js, no config needed
+Push to `master` — Vercel auto-deploys. To set up from scratch:
+
+1. Import repo in Vercel dashboard
+2. Add `GEMINI_API_KEY` and `GEMINI_MODEL=gemini-3.1-flash-lite` as environment variables
+3. Deploy — Vercel auto-detects Next.js
