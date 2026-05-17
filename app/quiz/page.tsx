@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { CaretDown } from "@phosphor-icons/react";
+import { getHospitalsByState } from "@/lib/hospitals";
+import { getCitiesByState } from "@/lib/locations";
 
 const NIGERIAN_STATES = [
   "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa", "Benue",
@@ -13,11 +15,13 @@ const NIGERIAN_STATES = [
   "Osun", "Oyo", "Plateau", "Rivers", "Sokoto", "Taraba", "Yobe", "Zamfara",
 ];
 
+// Q1: Age | Q2: Coverage | Q3: Location (state+city) | Q4: Budget
+// Q5: Conditions | Q6: Hospital | Q7: Priority
 const CONTEXTUAL_MESSAGES = [
-  null, // index 0 unused
+  null,
   { headline: "Let's find your plan", subtext: "A few quick questions and we'll match you to the right health insurance in Nigeria." },
-  { message: "Your location helps us show only plans with hospitals near you." },
   { message: "Coverage needs change depending on who you're protecting." },
+  { message: "Your location helps us show only plans with hospitals near you." },
   { message: "We'll only recommend plans that actually fit what you can spend." },
   { message: "This helps us flag any exclusions or waiting periods that could affect you." },
   { message: "If you have a trusted hospital, we'll make sure it's in the network." },
@@ -26,8 +30,9 @@ const CONTEXTUAL_MESSAGES = [
 
 type Answers = {
   age: string;
-  state: string;
   coverage: string;
+  state: string;
+  city: string;
   budget: string;
   conditions: string[];
   conditionsOther: string;
@@ -42,8 +47,9 @@ export default function QuizPage() {
   const [step, setStep] = useState(1);
   const [answers, setAnswers] = useState<Answers>({
     age: "",
-    state: "",
     coverage: "",
+    state: "",
+    city: "",
     budget: "",
     conditions: [],
     conditionsOther: "",
@@ -53,7 +59,15 @@ export default function QuizPage() {
   const [error, setError] = useState("");
 
   function update(field: Exclude<keyof Answers, "conditions">, value: string) {
-    setAnswers((prev) => ({ ...prev, [field]: value } as Answers));
+    setAnswers((prev) => {
+      const updated = { ...prev, [field]: value } as Answers;
+      // Clear dependent fields when state changes
+      if (field === "state") {
+        updated.city = "";
+        updated.preferredHospital = "";
+      }
+      return updated;
+    });
     setError("");
   }
 
@@ -64,9 +78,7 @@ export default function QuizPage() {
         return { ...prev, conditions: current.includes("none") ? [] : ["none"] };
       }
       const without = current.filter((c) => c !== "none" && c !== value);
-      if (current.includes(value)) {
-        return { ...prev, conditions: without };
-      }
+      if (current.includes(value)) return { ...prev, conditions: without };
       return { ...prev, conditions: [...without, value] };
     });
     setError("");
@@ -75,8 +87,11 @@ export default function QuizPage() {
   function canAdvance(): boolean {
     switch (step) {
       case 1: return answers.age.trim() !== "" && Number(answers.age) > 0;
-      case 2: return answers.state !== "";
-      case 3: return answers.coverage !== "";
+      case 2: return answers.coverage !== "";
+      case 3:
+        if (answers.state === "") return false;
+        if (answers.coverage === "individual") return answers.city !== "";
+        return true;
       case 4: return answers.budget !== "";
       case 5: return answers.conditions.length > 0;
       case 6: return true;
@@ -139,7 +154,6 @@ export default function QuizPage() {
             error={error}
           />
 
-          {/* Navigation */}
           <div className="pt-2">
             {step < TOTAL_STEPS ? (
               <button
@@ -189,29 +203,22 @@ function StepContent({
 
   return (
     <div className="space-y-6">
-      {/* Contextual message */}
       {ctx && (
         <div className="space-y-2">
           {"headline" in ctx ? (
             <>
-              <h1
-                className="text-3xl font-bold text-[#1a1a1a]"
-                style={{ fontFamily: "var(--font-figtree)" }}
-              >
+              <h1 className="text-3xl font-bold text-[#1a1a1a]" style={{ fontFamily: "var(--font-figtree)" }}>
                 {ctx.headline}
               </h1>
-              <p className="text-[15px] text-[#555] leading-relaxed">
-                {ctx.subtext}
-              </p>
+              <p className="text-[15px] text-[#555] leading-relaxed">{ctx.subtext}</p>
             </>
           ) : (
-            <p className="text-[15px] font-medium text-[#1a1a1a]">
-              {ctx.message}
-            </p>
+            <p className="text-[15px] font-medium text-[#1a1a1a]">{ctx.message}</p>
           )}
         </div>
       )}
 
+      {/* Q1 — Age */}
       {step === 1 && (
         <Question label="How old are you?">
           <input
@@ -226,29 +233,8 @@ function StepContent({
         </Question>
       )}
 
+      {/* Q2 — Coverage */}
       {step === 2 && (
-        <Question label="Which state are you in?">
-          <div className="relative">
-            <select
-              value={answers.state}
-              onChange={(e) => update("state", e.target.value)}
-              className="w-full appearance-none border-2 border-gray-200 focus:border-[#e8603c] rounded-xl pl-4 pr-12 py-3 text-lg outline-none bg-white transition-colors"
-            >
-              <option value="">Select your state</option>
-              {NIGERIAN_STATES.map((s) => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
-            <CaretDown
-              size={20}
-              color="#888888"
-              className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none"
-            />
-          </div>
-        </Question>
-      )}
-
-      {step === 3 && (
         <Question label="Is this plan for just you, or your family too?">
           <OptionGroup
             options={[
@@ -262,6 +248,59 @@ function StepContent({
         </Question>
       )}
 
+      {/* Q3 — Location: state + city */}
+      {step === 3 && (
+        <Question label="Where are you located?">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* State */}
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium text-gray-500">State</label>
+              <div className="relative">
+                <select
+                  value={answers.state}
+                  onChange={(e) => update("state", e.target.value)}
+                  className="w-full appearance-none border-2 border-gray-200 focus:border-[#e8603c] rounded-xl pl-4 pr-12 py-3 text-base outline-none bg-white transition-colors"
+                >
+                  <option value="">Select state</option>
+                  {NIGERIAN_STATES.map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+                <CaretDown size={20} color="#888888" className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
+            </div>
+
+            {/* City — only show after state selected */}
+            {answers.state && (
+              <div className="flex flex-col gap-1">
+                <label className="text-sm font-medium text-gray-500">City or area</label>
+                <div className="relative">
+                  <select
+                    value={answers.city}
+                    onChange={(e) => update("city", e.target.value)}
+                    className="w-full appearance-none border-2 border-gray-200 focus:border-[#e8603c] rounded-xl pl-4 pr-12 py-3 text-base outline-none bg-white transition-colors"
+                  >
+                    <option value="">Select city or area</option>
+                    {getCitiesByState(answers.state).map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                  <CaretDown size={20} color="#888888" className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Helper for family/couple */}
+          {answers.coverage !== "individual" && answers.state && (
+            <p className="text-sm text-gray-400 mt-2">
+              Skip this if your family is in a different location — you can specify their area when selecting a hospital.
+            </p>
+          )}
+        </Question>
+      )}
+
+      {/* Q4 — Budget */}
       {step === 4 && (
         <Question label="What is your monthly budget for health insurance?">
           <OptionGroup
@@ -277,6 +316,7 @@ function StepContent({
         </Question>
       )}
 
+      {/* Q5 — Conditions (tile grid, multi-select) */}
       {step === 5 && (
         <Question label="Do you have any existing health conditions?">
           <p className="text-sm text-gray-400 -mt-1">Select all that apply.</p>
@@ -308,21 +348,22 @@ function StepContent({
         </Question>
       )}
 
+      {/* Q6 — Hospital autocomplete */}
       {step === 6 && (
         <Question
           label="Is there a specific hospital you would prefer to use?"
           hint="Optional — leave blank if you have no preference."
         >
-          <input
-            type="text"
+          <HospitalSearch
+            state={answers.state}
+            city={answers.city}
             value={answers.preferredHospital}
-            onChange={(e) => update("preferredHospital", e.target.value)}
-            placeholder="e.g. Lagos Island General Hospital"
-            className="w-full border-2 border-gray-200 focus:border-[#e8603c] rounded-xl px-4 py-3 text-lg outline-none transition-colors"
+            onChange={(v) => update("preferredHospital", v)}
           />
         </Question>
       )}
 
+      {/* Q7 — Priority */}
       {step === 7 && (
         <Question label="What matters most to you in a health plan?">
           <OptionGroup
@@ -338,28 +379,15 @@ function StepContent({
         </Question>
       )}
 
-      {error && (
-        <p className="text-red-500 text-sm text-center">{error}</p>
-      )}
+      {error && <p className="text-red-500 text-sm text-center">{error}</p>}
     </div>
   );
 }
 
-function Question({
-  label,
-  hint,
-  children,
-}: {
-  label: string;
-  hint?: string;
-  children: React.ReactNode;
-}) {
+function Question({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
     <div className="space-y-3">
-      <h2
-        className="text-2xl font-bold text-gray-900 leading-snug"
-        style={{ fontFamily: "var(--font-figtree)" }}
-      >
+      <h2 className="text-2xl font-bold text-gray-900 leading-snug" style={{ fontFamily: "var(--font-figtree)" }}>
         {label}
       </h2>
       {hint && <p className="text-sm text-gray-400">{hint}</p>}
@@ -369,9 +397,7 @@ function Question({
 }
 
 function OptionGroup({
-  options,
-  selected,
-  onSelect,
+  options, selected, onSelect,
 }: {
   options: { value: string; label: string }[];
   selected: string;
@@ -398,9 +424,7 @@ function OptionGroup({
 }
 
 function MultiOptionGroup({
-  options,
-  selected,
-  onToggle,
+  options, selected, onToggle,
 }: {
   options: { value: string; label: string }[];
   selected: string[];
@@ -421,23 +445,142 @@ function MultiOptionGroup({
     <div className="flex flex-col gap-2">
       <div className="grid grid-cols-3 gap-2">
         {mainOptions.map(({ value, label }) => (
-          <button
-            key={value}
-            onClick={() => onToggle(value)}
-            className={tileClass(selected.includes(value))}
-          >
+          <button key={value} onClick={() => onToggle(value)} className={tileClass(selected.includes(value))}>
             {label}
           </button>
         ))}
       </div>
-
       {otherOption && (
-        <button
-          onClick={() => onToggle("other")}
-          className={`w-full ${tileClass(selected.includes("other"))}`}
-        >
+        <button onClick={() => onToggle("other")} className={`w-full ${tileClass(selected.includes("other"))}`}>
           {otherOption.label}
         </button>
+      )}
+    </div>
+  );
+}
+
+function HospitalSearch({
+  state, city, value, onChange,
+}: {
+  state: string;
+  city: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const [mode, setMode] = useState<"search" | "selected" | "manual">(
+    value ? "selected" : "search"
+  );
+  const [query, setQuery] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [manualText, setManualText] = useState("");
+
+  const hospitals = state ? getHospitalsByState(state) : [];
+  const filtered = query.trim().length > 0
+    ? hospitals
+        .filter(
+          (h) =>
+            h.name.toLowerCase().includes(query.toLowerCase()) ||
+            h.city.toLowerCase().includes(query.toLowerCase())
+        )
+        .sort((a, b) => {
+          if (city) {
+            const aMatch = a.city.toLowerCase() === city.toLowerCase();
+            const bMatch = b.city.toLowerCase() === city.toLowerCase();
+            if (aMatch && !bMatch) return -1;
+            if (!aMatch && bMatch) return 1;
+          }
+          return 0;
+        })
+        .slice(0, 7)
+    : [];
+
+  // Pill: hospital was selected from the list
+  if (mode === "selected" && value) {
+    return (
+      <div className="flex items-center gap-3 border-2 border-[#e8603c] bg-[#fff1ec] rounded-xl px-4 py-3">
+        <span className="flex-1 text-[#e8603c] font-medium text-base">{value}</span>
+        <button
+          type="button"
+          onClick={() => { onChange(""); setMode("search"); setQuery(""); }}
+          className="text-[#e8603c] hover:text-[#c0392b] text-xl font-bold leading-none"
+          aria-label="Remove hospital"
+        >
+          ×
+        </button>
+      </div>
+    );
+  }
+
+  // Manual text entry
+  if (mode === "manual") {
+    return (
+      <div className="space-y-2">
+        <input
+          type="text"
+          value={manualText}
+          onChange={(e) => { setManualText(e.target.value); onChange(e.target.value); }}
+          placeholder="Type your hospital name..."
+          className="w-full border-2 border-gray-200 focus:border-[#e8603c] rounded-xl px-4 py-3 text-lg outline-none transition-colors"
+          autoFocus
+        />
+        <button
+          type="button"
+          onClick={() => { setMode("search"); onChange(""); setManualText(""); }}
+          className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
+        >
+          ← Search from list instead
+        </button>
+      </div>
+    );
+  }
+
+  // Search mode
+  return (
+    <div className="relative">
+      <input
+        type="text"
+        value={query}
+        onChange={(e) => { setQuery(e.target.value); setShowDropdown(true); }}
+        onFocus={() => setShowDropdown(true)}
+        onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
+        placeholder="Search for your hospital..."
+        className="w-full border-2 border-gray-200 focus:border-[#e8603c] rounded-xl px-4 py-3 text-lg outline-none transition-colors"
+      />
+      {showDropdown && query.trim().length > 0 && (
+        <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden max-h-64 overflow-y-auto">
+          {filtered.map((h) => (
+            <button
+              key={h.id}
+              type="button"
+              className="w-full text-left px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-0 transition-colors"
+              onMouseDown={(e) => {
+                e.preventDefault();
+                onChange(h.name);
+                setMode("selected");
+                setQuery("");
+                setShowDropdown(false);
+              }}
+            >
+              <p className="font-medium text-gray-900 text-sm">{h.name}</p>
+              <p className="text-xs text-gray-500">{h.city}, {h.state}</p>
+            </button>
+          ))}
+          {filtered.length === 0 && (
+            <p className="px-4 py-3 text-sm text-gray-400">No hospitals found matching "{query}"</p>
+          )}
+          <button
+            type="button"
+            className="w-full text-left px-4 py-3 text-sm text-[#e8603c] hover:bg-[#fff1ec] transition-colors border-t border-gray-100"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              setMode("manual");
+              setShowDropdown(false);
+              setQuery("");
+            }}
+          >
+            My hospital isn't listed — type name manually
+          </button>
+        </div>
       )}
     </div>
   );
