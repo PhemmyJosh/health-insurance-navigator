@@ -15,12 +15,13 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: "Health Insurance Navigator Nigeria",
+  title: "Laima — Find the Right Health Plan",
   description:
-    "Answer 7 quick questions and get a personalised health insurance recommendation tailored to your needs and budget.",
+    "Get a personalised health insurance recommendation built around your life, budget, and health needs.",
   openGraph: {
-    title: "Health Insurance Navigator Nigeria",
-    description: "Find the right health insurance plan for you.",
+    title: "Laima — Find the Right Health Plan",
+    description:
+      "Get a personalised health insurance recommendation built around your life, budget, and health needs.",
     type: "website",
   },
 };
