@@ -14,13 +14,13 @@ const NIGERIAN_STATES = [
 
 const CONTEXTUAL_MESSAGES = [
   null, // index 0 unused
-  { headline: "Let's find your plan", subtext: "Answer a few quick questions and we'll match you to the right health insurance plan for your situation." },
-  { message: "Good start — a few more things to know" },
-  { message: "You're doing great" },
-  { message: "Almost there" },
-  { message: "This one is important" },
-  { message: "Nearly done" },
-  { message: "Last one — we promise" },
+  { headline: "Let's find your plan", subtext: "A few quick questions and we'll match you to the right health insurance in Nigeria." },
+  { message: "Your location helps us show only plans with hospitals near you." },
+  { message: "Coverage needs change depending on who you're protecting." },
+  { message: "We'll only recommend plans that actually fit what you can spend." },
+  { message: "This helps us flag any exclusions or waiting periods that could affect you." },
+  { message: "If you have a trusted hospital, we'll make sure it's in the network." },
+  { message: "Last one. This tells us what matters most so we can weight your recommendation correctly." },
 ];
 
 type Answers = {
@@ -398,25 +398,39 @@ function MultiOptionGroup({
   selected: string[];
   onToggle: (value: string) => void;
 }) {
+  const mainOptions = options.filter((o) => o.value !== "other");
+  const otherOption = options.find((o) => o.value === "other");
+
+  function tileClass(isSelected: boolean) {
+    return `flex items-center justify-center text-center px-2 py-4 rounded-xl border-2 text-sm font-medium transition-all duration-150 ${
+      isSelected
+        ? "border-[#e8603c] bg-[#fdf3f0] text-[#e8603c]"
+        : "border-[#e5e5e5] bg-white text-gray-700 hover:border-gray-300"
+    }`;
+  }
+
   return (
-    <div className="flex flex-col gap-3">
-      {options.map(({ value, label }) => {
-        const isSelected = selected.includes(value);
-        return (
+    <div className="flex flex-col gap-2">
+      <div className="grid grid-cols-3 gap-2">
+        {mainOptions.map(({ value, label }) => (
           <button
             key={value}
             onClick={() => onToggle(value)}
-            className={`w-full text-left px-5 py-4 rounded-xl border-2 font-medium transition-all duration-150 ${
-              isSelected
-                ? "border-[#e8603c] bg-[#fff1ec] text-[#e8603c]"
-                : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
-            }`}
+            className={tileClass(selected.includes(value))}
           >
-            {isSelected && <span className="mr-2 text-[#e8603c]">✓</span>}
             {label}
           </button>
-        );
-      })}
+        ))}
+      </div>
+
+      {otherOption && (
+        <button
+          onClick={() => onToggle("other")}
+          className={`w-full ${tileClass(selected.includes("other"))}`}
+        >
+          {otherOption.label}
+        </button>
+      )}
     </div>
   );
 }
