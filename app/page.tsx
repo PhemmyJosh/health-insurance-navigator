@@ -32,7 +32,7 @@ export default function LandingPage() {
       <section className="flex flex-col md:flex-row md:items-start px-4 md:px-[144px] mt-8 md:mt-16 flex-1 gap-8 md:gap-0">
         {/* Text content */}
         <div className="flex flex-col gap-4 md:w-[533px] md:shrink-0">
-          <div className="inline-flex items-center gap-2 bg-[#ebfffd] border border-[#0f766e] px-4 py-2 rounded-full self-center md:self-start">
+          <div className="inline-flex items-center gap-2 bg-[#ebfffd] border border-[#0f766e] px-4 py-2 rounded-full self-start">
             <span className="w-2 h-2 rounded-full bg-[#0f766e] shrink-0" />
             <span className="text-[#0f766e] text-[14px]">
               Free · No registration required
@@ -45,7 +45,7 @@ export default function LandingPage() {
                 className="text-[36px] md:text-[64px] font-bold text-[#1a1a1a] leading-[1.1] tracking-[-1.28px]"
                 style={{ fontFamily: "var(--font-figtree)" }}
               >
-                We&apos;ll find the right health insurance for you
+                We&apos;ll find the right health insurance for&nbsp;you
               </h1>
               <p className="text-[16px] md:text-[18px] text-[#444] md:w-[350px] leading-normal">
                 No endless comparison tables. Just a plan that fits your needs.
