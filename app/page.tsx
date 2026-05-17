@@ -82,7 +82,7 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="text-center py-10 mt-8 md:mt-auto">
         <p className="text-[16px] text-[rgba(68,68,68,0.5)]">
-          Not affiliated with any HMO. © 2026
+          Not affiliated with any HMO. © Laima 2026
         </p>
       </footer>
     </div>
