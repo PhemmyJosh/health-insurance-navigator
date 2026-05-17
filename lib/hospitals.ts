@@ -23,6 +23,11 @@ export const HOSPITALS: Hospital[] = [
   { id: "fct_13", name: "Borromeo Hospital", city: "Abuja (Central)", state: "FCT (Abuja)", type: "mission" },
   { id: "fct_14", name: "Nigerian Turkish International Hospital", city: "Abuja (Central)", state: "FCT (Abuja)", type: "private" },
   { id: "fct_15", name: "Jabi Lake Medical Centre", city: "Wuse", state: "FCT (Abuja)", type: "private" },
+  { id: "fct_16", name: "Turkish Nizamiye Hospital", city: "Jabi", state: "FCT (Abuja)", type: "private" },
+  { id: "fct_17", name: "57 Medical Services", city: "Wuse", state: "FCT (Abuja)", type: "private" },
+  { id: "fct_18", name: "Wuse General Hospital", city: "Wuse", state: "FCT (Abuja)", type: "state" },
+  { id: "fct_19", name: "Lifecross Medical Centre", city: "Garki", state: "FCT (Abuja)", type: "private" },
+  { id: "fct_20", name: "Zankli Medical Centre", city: "Maitama", state: "FCT (Abuja)", type: "private" },
 
   // ── ABIA ─────────────────────────────────────────────────────────────────
   { id: "abi_01", name: "Federal Medical Centre Umuahia", city: "Umuahia", state: "Abia", type: "federal" },
@@ -37,6 +42,8 @@ export const HOSPITALS: Hospital[] = [
   { id: "abi_10", name: "Meridian Hospital Aba", city: "Aba", state: "Abia", type: "private" },
   { id: "abi_11", name: "Iheoma Hospital", city: "Umuahia", state: "Abia", type: "private" },
   { id: "abi_12", name: "St. Bridget's Hospital Umuahia", city: "Umuahia", state: "Abia", type: "mission" },
+  { id: "abi_13", name: "Palm City Hospital", city: "Umuahia", state: "Abia", type: "private" },
+  { id: "abi_14", name: "Aba Memorial Hospital", city: "Aba", state: "Abia", type: "state" },
 
   // ── ADAMAWA ──────────────────────────────────────────────────────────────
   { id: "ada_01", name: "Federal Medical Centre Yola", city: "Yola", state: "Adamawa", type: "federal" },
@@ -51,6 +58,8 @@ export const HOSPITALS: Hospital[] = [
   { id: "ada_10", name: "Modibbo Adama University Medical Centre", city: "Yola", state: "Adamawa", type: "state" },
   { id: "ada_11", name: "Jimeta Medical Centre", city: "Jimeta", state: "Adamawa", type: "private" },
   { id: "ada_12", name: "Standard Hospital Mubi", city: "Mubi", state: "Adamawa", type: "private" },
+  { id: "ada_13", name: "Mayo Belwa General Hospital", city: "Mayo Belwa", state: "Adamawa", type: "state" },
+  { id: "ada_14", name: "Ganye Baptist Hospital", city: "Ganye", state: "Adamawa", type: "mission" },
 
   // ── AKWA IBOM ─────────────────────────────────────────────────────────────
   { id: "aki_01", name: "University of Uyo Teaching Hospital (UUTH)", city: "Uyo", state: "Akwa Ibom", type: "federal" },
@@ -65,6 +74,8 @@ export const HOSPITALS: Hospital[] = [
   { id: "aki_10", name: "Faith Clinic Uyo", city: "Uyo", state: "Akwa Ibom", type: "private" },
   { id: "aki_11", name: "Standard Hospital Uyo", city: "Uyo", state: "Akwa Ibom", type: "private" },
   { id: "aki_12", name: "Etinan General Hospital", city: "Etinan", state: "Akwa Ibom", type: "state" },
+  { id: "aki_13", name: "Foundation Hospital Uyo", city: "Uyo", state: "Akwa Ibom", type: "private" },
+  { id: "aki_14", name: "Doctors Hospital Uyo", city: "Uyo", state: "Akwa Ibom", type: "private" },
 
   // ── ANAMBRA ───────────────────────────────────────────────────────────────
   { id: "ana_01", name: "Nnamdi Azikiwe University Teaching Hospital", city: "Nnewi", state: "Anambra", type: "federal" },
@@ -80,6 +91,8 @@ export const HOSPITALS: Hospital[] = [
   { id: "ana_11", name: "Unique Memorial Hospital Onitsha", city: "Onitsha", state: "Anambra", type: "private" },
   { id: "ana_12", name: "Clina Lancet Awka", city: "Awka", state: "Anambra", type: "private" },
   { id: "ana_13", name: "Tonimas Specialist Hospital", city: "Nnewi", state: "Anambra", type: "private" },
+  { id: "ana_14", name: "Prime Medical Centre Nnewi", city: "Nnewi", state: "Anambra", type: "private" },
+  { id: "ana_15", name: "Anambra State Specialist Hospital", city: "Awka", state: "Anambra", type: "state" },
 
   // ── BAUCHI ────────────────────────────────────────────────────────────────
   { id: "bau_01", name: "Abubakar Tafawa Balewa University Teaching Hospital", city: "Bauchi", state: "Bauchi", type: "federal" },
@@ -94,6 +107,7 @@ export const HOSPITALS: Hospital[] = [
   { id: "bau_10", name: "SDA Hospital Bauchi", city: "Bauchi", state: "Bauchi", type: "mission" },
   { id: "bau_11", name: "Faith Specialist Hospital Bauchi", city: "Bauchi", state: "Bauchi", type: "private" },
   { id: "bau_12", name: "Al-Amin Hospital Bauchi", city: "Bauchi", state: "Bauchi", type: "private" },
+  { id: "bau_13", name: "Rilwan Specialist Hospital", city: "Bauchi", state: "Bauchi", type: "private" },
 
   // ── BAYELSA ───────────────────────────────────────────────────────────────
   { id: "bay_01", name: "Federal Medical Centre Yenagoa", city: "Yenagoa", state: "Bayelsa", type: "federal" },
@@ -107,6 +121,8 @@ export const HOSPITALS: Hospital[] = [
   { id: "bay_09", name: "Gloryland Hospital Yenagoa", city: "Yenagoa", state: "Bayelsa", type: "private" },
   { id: "bay_10", name: "Beulah Medical Services", city: "Yenagoa", state: "Bayelsa", type: "private" },
   { id: "bay_11", name: "Bayelsa Specialist Hospital", city: "Yenagoa", state: "Bayelsa", type: "state" },
+  { id: "bay_12", name: "Bayelsa Medical University Hospital", city: "Yenagoa", state: "Bayelsa", type: "state" },
+  { id: "bay_13", name: "Bethel Medical Centre Yenagoa", city: "Yenagoa", state: "Bayelsa", type: "private" },
 
   // ── BENUE ─────────────────────────────────────────────────────────────────
   { id: "ben_01", name: "Benue State University Teaching Hospital", city: "Makurdi", state: "Benue", type: "state" },
@@ -121,6 +137,7 @@ export const HOSPITALS: Hospital[] = [
   { id: "ben_10", name: "Bridge Hospital Makurdi", city: "Makurdi", state: "Benue", type: "private" },
   { id: "ben_11", name: "Benue State Hospital", city: "Makurdi", state: "Benue", type: "state" },
   { id: "ben_12", name: "Otukpo General Hospital", city: "Otukpo", state: "Benue", type: "state" },
+  { id: "ben_13", name: "Living Hope Hospital Makurdi", city: "Makurdi", state: "Benue", type: "private" },
 
   // ── BORNO ─────────────────────────────────────────────────────────────────
   { id: "bor_01", name: "University of Maiduguri Teaching Hospital (UMTH)", city: "Maiduguri", state: "Borno", type: "federal" },
@@ -135,6 +152,7 @@ export const HOSPITALS: Hospital[] = [
   { id: "bor_10", name: "Borno State Hospital Maiduguri", city: "Maiduguri", state: "Borno", type: "state" },
   { id: "bor_11", name: "Marie Stopes Clinic Maiduguri", city: "Maiduguri", state: "Borno", type: "private" },
   { id: "bor_12", name: "Al-Kanemi Hospital", city: "Maiduguri", state: "Borno", type: "private" },
+  { id: "bor_13", name: "Maiduguri City Hospital", city: "Maiduguri", state: "Borno", type: "private" },
 
   // ── CROSS RIVER ───────────────────────────────────────────────────────────
   { id: "cro_01", name: "University of Calabar Teaching Hospital (UCTH)", city: "Calabar", state: "Cross River", type: "federal" },
@@ -149,6 +167,8 @@ export const HOSPITALS: Hospital[] = [
   { id: "cro_10", name: "General Hospital Obubra", city: "Obubra", state: "Cross River", type: "state" },
   { id: "cro_11", name: "St. Margaret's Hospital Calabar", city: "Calabar", state: "Cross River", type: "mission" },
   { id: "cro_12", name: "General Hospital Yala", city: "Yala", state: "Cross River", type: "state" },
+  { id: "cro_13", name: "University of Calabar Medical Centre", city: "Calabar", state: "Cross River", type: "state" },
+  { id: "cro_14", name: "Kana Specialist Hospital", city: "Calabar", state: "Cross River", type: "private" },
 
   // ── DELTA ─────────────────────────────────────────────────────────────────
   { id: "del_01", name: "Federal Medical Centre Asaba", city: "Asaba", state: "Delta", type: "federal" },
@@ -164,6 +184,8 @@ export const HOSPITALS: Hospital[] = [
   { id: "del_11", name: "Prime Hospital Warri", city: "Warri", state: "Delta", type: "private" },
   { id: "del_12", name: "Asaba Specialist Hospital", city: "Asaba", state: "Delta", type: "private" },
   { id: "del_13", name: "Warri Specialist Hospital", city: "Warri", state: "Delta", type: "state" },
+  { id: "del_14", name: "Orerokpe General Hospital", city: "Orerokpe", state: "Delta", type: "state" },
+  { id: "del_15", name: "Pan-African Medical Centre Warri", city: "Warri", state: "Delta", type: "private" },
 
   // ── EBONYI ────────────────────────────────────────────────────────────────
   { id: "ebo_01", name: "Alex Ekwueme Federal University Teaching Hospital", city: "Abakaliki", state: "Ebonyi", type: "federal" },
@@ -177,6 +199,8 @@ export const HOSPITALS: Hospital[] = [
   { id: "ebo_09", name: "Volunteer Hospital Abakaliki", city: "Abakaliki", state: "Ebonyi", type: "private" },
   { id: "ebo_10", name: "General Hospital Ishiagu", city: "Ishiagu", state: "Ebonyi", type: "state" },
   { id: "ebo_11", name: "Baptist Hospital Umuoha", city: "Afikpo", state: "Ebonyi", type: "mission" },
+  { id: "ebo_12", name: "Ebonyi Medical Centre", city: "Abakaliki", state: "Ebonyi", type: "private" },
+  { id: "ebo_13", name: "Bethesda Hospital Abakaliki", city: "Abakaliki", state: "Ebonyi", type: "mission" },
 
   // ── EDO ───────────────────────────────────────────────────────────────────
   { id: "edo_01", name: "University of Benin Teaching Hospital (UBTH)", city: "Benin City", state: "Edo", type: "federal" },
@@ -192,6 +216,8 @@ export const HOSPITALS: Hospital[] = [
   { id: "edo_11", name: "STOIC Hospital Benin City", city: "Benin City", state: "Edo", type: "private" },
   { id: "edo_12", name: "Evelyn Medical Centre", city: "Benin City", state: "Edo", type: "private" },
   { id: "edo_13", name: "Fugar General Hospital", city: "Fugar", state: "Edo", type: "state" },
+  { id: "edo_14", name: "Igbinedion University Teaching Hospital", city: "Okada", state: "Edo", type: "private" },
+  { id: "edo_15", name: "Alade Specialist Hospital", city: "Benin City", state: "Edo", type: "private" },
 
   // ── EKITI ─────────────────────────────────────────────────────────────────
   { id: "eki_01", name: "Ekiti State University Teaching Hospital (EKSUTH)", city: "Ado-Ekiti", state: "Ekiti", type: "state" },
@@ -205,6 +231,8 @@ export const HOSPITALS: Hospital[] = [
   { id: "eki_09", name: "Christ Hospital Ado-Ekiti", city: "Ado-Ekiti", state: "Ekiti", type: "mission" },
   { id: "eki_10", name: "Ekiti State Hospital", city: "Ado-Ekiti", state: "Ekiti", type: "state" },
   { id: "eki_11", name: "General Hospital Ilawe-Ekiti", city: "Ilawe-Ekiti", state: "Ekiti", type: "state" },
+  { id: "eki_12", name: "St. Luke's Hospital Ado-Ekiti", city: "Ado-Ekiti", state: "Ekiti", type: "mission" },
+  { id: "eki_13", name: "Grace Hospital Ado-Ekiti", city: "Ado-Ekiti", state: "Ekiti", type: "private" },
 
   // ── ENUGU ─────────────────────────────────────────────────────────────────
   { id: "enu_01", name: "University of Nigeria Teaching Hospital (UNTH)", city: "Enugu", state: "Enugu", type: "federal" },
@@ -219,6 +247,9 @@ export const HOSPITALS: Hospital[] = [
   { id: "enu_10", name: "Care & Cure Hospital", city: "Enugu", state: "Enugu", type: "private" },
   { id: "enu_11", name: "Udi General Hospital", city: "Udi", state: "Enugu", type: "state" },
   { id: "enu_12", name: "Prime Care Hospital Enugu", city: "Enugu", state: "Enugu", type: "private" },
+  { id: "enu_13", name: "Memfys Hospital", city: "Enugu", state: "Enugu", type: "private" },
+  { id: "enu_14", name: "Our Lady of Lourdes Hospital Enugu", city: "Enugu", state: "Enugu", type: "mission" },
+  { id: "enu_15", name: "St. Raphael's Hospital Nsukka", city: "Nsukka", state: "Enugu", type: "mission" },
 
   // ── GOMBE ─────────────────────────────────────────────────────────────────
   { id: "gom_01", name: "Federal Teaching Hospital Gombe", city: "Gombe", state: "Gombe", type: "federal" },
@@ -232,6 +263,7 @@ export const HOSPITALS: Hospital[] = [
   { id: "gom_09", name: "Pine Hill Hospital Gombe", city: "Gombe", state: "Gombe", type: "private" },
   { id: "gom_10", name: "Gombe State Hospital", city: "Gombe", state: "Gombe", type: "state" },
   { id: "gom_11", name: "Al-Mujtaba Specialist Hospital", city: "Gombe", state: "Gombe", type: "private" },
+  { id: "gom_12", name: "Northeast Specialist Hospital", city: "Gombe", state: "Gombe", type: "private" },
 
   // ── IMO ───────────────────────────────────────────────────────────────────
   { id: "imo_01", name: "Federal Medical Centre Owerri", city: "Owerri", state: "Imo", type: "federal" },
@@ -246,6 +278,9 @@ export const HOSPITALS: Hospital[] = [
   { id: "imo_10", name: "Afor Specialist Hospital Owerri", city: "Owerri", state: "Imo", type: "private" },
   { id: "imo_11", name: "Mbaise General Hospital", city: "Mbaise", state: "Imo", type: "state" },
   { id: "imo_12", name: "Nkwerre General Hospital", city: "Nkwerre", state: "Imo", type: "state" },
+  { id: "imo_13", name: "Imo Specialist Hospital Owerri", city: "Owerri", state: "Imo", type: "state" },
+  { id: "imo_14", name: "Eastern Medical Centre Owerri", city: "Owerri", state: "Imo", type: "private" },
+  { id: "imo_15", name: "New Life Hospital Owerri", city: "Owerri", state: "Imo", type: "private" },
 
   // ── JIGAWA ────────────────────────────────────────────────────────────────
   { id: "jig_01", name: "Federal Medical Centre Birnin Kudu", city: "Birnin Kudu", state: "Jigawa", type: "federal" },
@@ -260,6 +295,7 @@ export const HOSPITALS: Hospital[] = [
   { id: "jig_10", name: "Hasiya Bayero Hospital Birnin Kudu", city: "Birnin Kudu", state: "Jigawa", type: "state" },
   { id: "jig_11", name: "Dutse Medical Centre", city: "Dutse", state: "Jigawa", type: "private" },
   { id: "jig_12", name: "General Hospital Kiyawa", city: "Kiyawa", state: "Jigawa", type: "state" },
+  { id: "jig_13", name: "Jigawa Medical Centre", city: "Dutse", state: "Jigawa", type: "private" },
 
   // ── KADUNA ────────────────────────────────────────────────────────────────
   { id: "kad_01", name: "Ahmadu Bello University Teaching Hospital (ABUTH)", city: "Zaria", state: "Kaduna", type: "federal" },
@@ -275,6 +311,8 @@ export const HOSPITALS: Hospital[] = [
   { id: "kad_11", name: "Zonkwa General Hospital", city: "Zonkwa", state: "Kaduna", type: "state" },
   { id: "kad_12", name: "Liberty Medical Centre Kaduna", city: "Kaduna", state: "Kaduna", type: "private" },
   { id: "kad_13", name: "Hajj Camp Hospital Kaduna", city: "Kaduna", state: "Kaduna", type: "state" },
+  { id: "kad_14", name: "International Eye Centre Kaduna", city: "Kaduna", state: "Kaduna", type: "private" },
+  { id: "kad_15", name: "St. Patrick's Hospital Kafanchan", city: "Kafanchan", state: "Kaduna", type: "mission" },
 
   // ── KANO ──────────────────────────────────────────────────────────────────
   { id: "kan_01", name: "Aminu Kano Teaching Hospital (AKTH)", city: "Kano", state: "Kano", type: "federal" },
@@ -290,6 +328,10 @@ export const HOSPITALS: Hospital[] = [
   { id: "kan_11", name: "Hajiya Gambo Sawaba General Hospital", city: "Kano", state: "Kano", type: "state" },
   { id: "kan_12", name: "Doctors Hospital Kano", city: "Kano", state: "Kano", type: "private" },
   { id: "kan_13", name: "City Clinic Kano", city: "Kano", state: "Kano", type: "private" },
+  { id: "kan_14", name: "National Orthopaedic Hospital Dala", city: "Dala", state: "Kano", type: "federal" },
+  { id: "kan_15", name: "Islamic Medical Centre Kano", city: "Kano", state: "Kano", type: "private" },
+  { id: "kan_16", name: "General Hospital Ungogo", city: "Ungogo", state: "Kano", type: "state" },
+  { id: "kan_17", name: "Noma Children's Hospital Kano", city: "Kano", state: "Kano", type: "state" },
 
   // ── KATSINA ───────────────────────────────────────────────────────────────
   { id: "kat_01", name: "Federal Medical Centre Katsina", city: "Katsina", state: "Katsina", type: "federal" },
@@ -304,6 +346,7 @@ export const HOSPITALS: Hospital[] = [
   { id: "kat_10", name: "General Hospital Jibia", city: "Jibia", state: "Katsina", type: "state" },
   { id: "kat_11", name: "Katsina Medical Centre", city: "Katsina", state: "Katsina", type: "private" },
   { id: "kat_12", name: "Rimi General Hospital", city: "Rimi", state: "Katsina", type: "state" },
+  { id: "kat_13", name: "Katsina Children's Hospital", city: "Katsina", state: "Katsina", type: "state" },
 
   // ── KEBBI ─────────────────────────────────────────────────────────────────
   { id: "keb_01", name: "Federal Medical Centre Birnin Kebbi", city: "Birnin Kebbi", state: "Kebbi", type: "federal" },
@@ -317,6 +360,7 @@ export const HOSPITALS: Hospital[] = [
   { id: "keb_09", name: "Birnin Kebbi Specialist Hospital", city: "Birnin Kebbi", state: "Kebbi", type: "state" },
   { id: "keb_10", name: "Excel Medical Centre Birnin Kebbi", city: "Birnin Kebbi", state: "Kebbi", type: "private" },
   { id: "keb_11", name: "General Hospital Kalgo", city: "Kalgo", state: "Kebbi", type: "state" },
+  { id: "keb_12", name: "Kebbi State Teaching Hospital", city: "Birnin Kebbi", state: "Kebbi", type: "state" },
 
   // ── KOGI ──────────────────────────────────────────────────────────────────
   { id: "kog_01", name: "Federal Medical Centre Lokoja", city: "Lokoja", state: "Kogi", type: "federal" },
@@ -331,6 +375,7 @@ export const HOSPITALS: Hospital[] = [
   { id: "kog_10", name: "Confluence Medical Centre Lokoja", city: "Lokoja", state: "Kogi", type: "private" },
   { id: "kog_11", name: "General Hospital Ogaminana", city: "Ogaminana", state: "Kogi", type: "state" },
   { id: "kog_12", name: "Lokoja Specialist Hospital", city: "Lokoja", state: "Kogi", type: "state" },
+  { id: "kog_13", name: "City Hospital Okene", city: "Okene", state: "Kogi", type: "private" },
 
   // ── KWARA ─────────────────────────────────────────────────────────────────
   { id: "kwa_01", name: "University of Ilorin Teaching Hospital (UITH)", city: "Ilorin", state: "Kwara", type: "federal" },
@@ -345,6 +390,7 @@ export const HOSPITALS: Hospital[] = [
   { id: "kwa_10", name: "Medela Hospital Ilorin", city: "Ilorin", state: "Kwara", type: "private" },
   { id: "kwa_11", name: "Tanke Specialist Hospital Ilorin", city: "Ilorin", state: "Kwara", type: "private" },
   { id: "kwa_12", name: "General Hospital Kaiama", city: "Kaiama", state: "Kwara", type: "state" },
+  { id: "kwa_13", name: "Bolton White Medical Centre Ilorin", city: "Ilorin", state: "Kwara", type: "private" },
 
   // ── LAGOS ─────────────────────────────────────────────────────────────────
   { id: "lag_01", name: "Lagos University Teaching Hospital (LUTH)", city: "Yaba", state: "Lagos", type: "federal" },
@@ -367,6 +413,14 @@ export const HOSPITALS: Hospital[] = [
   { id: "lag_18", name: "St. Luke's Hospital", city: "Yaba", state: "Lagos", type: "mission" },
   { id: "lag_19", name: "Doyen Specialist Hospital", city: "Ikeja", state: "Lagos", type: "private" },
   { id: "lag_20", name: "The Nest Hospital", city: "Surulere", state: "Lagos", type: "private" },
+  { id: "lag_21", name: "Evercare Hospital Lagos", city: "Lekki", state: "Lagos", type: "private" },
+  { id: "lag_22", name: "R Jolad Hospital", city: "Gbagada", state: "Lagos", type: "private" },
+  { id: "lag_23", name: "Duchess International Hospital", city: "Ikeja", state: "Lagos", type: "private" },
+  { id: "lag_24", name: "Lagoon Hospital Victoria Island", city: "Victoria Island", state: "Lagos", type: "private" },
+  { id: "lag_25", name: "Bridge Clinic Lagos", city: "Victoria Island", state: "Lagos", type: "private" },
+  { id: "lag_26", name: "Island Maternity Hospital", city: "Lagos Island", state: "Lagos", type: "state" },
+  { id: "lag_27", name: "Ikeja General Hospital", city: "Ikeja", state: "Lagos", type: "state" },
+  { id: "lag_28", name: "Isolo General Hospital", city: "Isolo", state: "Lagos", type: "state" },
 
   // ── NASARAWA ──────────────────────────────────────────────────────────────
   { id: "nas_01", name: "Dalhatu Araf Specialist Hospital", city: "Lafia", state: "Nasarawa", type: "federal" },
@@ -380,6 +434,7 @@ export const HOSPITALS: Hospital[] = [
   { id: "nas_09", name: "Lafia Medical Centre", city: "Lafia", state: "Nasarawa", type: "private" },
   { id: "nas_10", name: "Sterling Medical Centre Lafia", city: "Lafia", state: "Nasarawa", type: "private" },
   { id: "nas_11", name: "Nasarawa State University Hospital", city: "Keffi", state: "Nasarawa", type: "state" },
+  { id: "nas_12", name: "Nasarawa Medical Centre", city: "Lafia", state: "Nasarawa", type: "private" },
 
   // ── NIGER ─────────────────────────────────────────────────────────────────
   { id: "nig_01", name: "Ibrahim Badamasi Babangida Specialist Hospital", city: "Minna", state: "Niger", type: "state" },
@@ -394,6 +449,7 @@ export const HOSPITALS: Hospital[] = [
   { id: "nig_10", name: "Agaie General Hospital", city: "Agaie", state: "Niger", type: "state" },
   { id: "nig_11", name: "Borgu General Hospital", city: "New Bussa", state: "Niger", type: "state" },
   { id: "nig_12", name: "Nupeco Hospital Minna", city: "Minna", state: "Niger", type: "private" },
+  { id: "nig_13", name: "Minna Specialist Hospital", city: "Minna", state: "Niger", type: "private" },
 
   // ── OGUN ──────────────────────────────────────────────────────────────────
   { id: "ogu_01", name: "Federal Medical Centre Abeokuta", city: "Abeokuta", state: "Ogun", type: "federal" },
@@ -408,6 +464,9 @@ export const HOSPITALS: Hospital[] = [
   { id: "ogu_10", name: "Regal Medical Centre Abeokuta", city: "Abeokuta", state: "Ogun", type: "private" },
   { id: "ogu_11", name: "Divine Specialist Hospital Sagamu", city: "Sagamu", state: "Ogun", type: "private" },
   { id: "ogu_12", name: "General Hospital Ijebu-Igbo", city: "Ijebu-Igbo", state: "Ogun", type: "state" },
+  { id: "ogu_13", name: "Bishop Davidson Hospital Sagamu", city: "Sagamu", state: "Ogun", type: "mission" },
+  { id: "ogu_14", name: "General Hospital Agbara", city: "Agbara", state: "Ogun", type: "state" },
+  { id: "ogu_15", name: "Remo District Hospital", city: "Sagamu", state: "Ogun", type: "state" },
 
   // ── ONDO ──────────────────────────────────────────────────────────────────
   { id: "ond_01", name: "Federal Medical Centre Owo", city: "Owo", state: "Ondo", type: "federal" },
@@ -422,6 +481,8 @@ export const HOSPITALS: Hospital[] = [
   { id: "ond_10", name: "Baptist Medical Centre Ogbese", city: "Oba-Ile", state: "Ondo", type: "mission" },
   { id: "ond_11", name: "Specialist Hospital Akure", city: "Akure", state: "Ondo", type: "private" },
   { id: "ond_12", name: "General Hospital Ile-Oluji", city: "Ile-Oluji", state: "Ondo", type: "state" },
+  { id: "ond_13", name: "Healing Stripes Hospital Akure", city: "Akure", state: "Ondo", type: "private" },
+  { id: "ond_14", name: "General Hospital Irele", city: "Irele", state: "Ondo", type: "state" },
 
   // ── OSUN ──────────────────────────────────────────────────────────────────
   { id: "osu_01", name: "Obafemi Awolowo University Teaching Hospital (OAUTHC)", city: "Ile-Ife", state: "Osun", type: "federal" },
@@ -436,6 +497,9 @@ export const HOSPITALS: Hospital[] = [
   { id: "osu_10", name: "Millennium Hospital Osogbo", city: "Osogbo", state: "Osun", type: "private" },
   { id: "osu_11", name: "General Hospital Ikirun", city: "Ikirun", state: "Osun", type: "state" },
   { id: "osu_12", name: "General Hospital Ejigbo", city: "Ejigbo", state: "Osun", type: "state" },
+  { id: "osu_13", name: "Apostolic Faith Hospital Ilesa", city: "Ilesa", state: "Osun", type: "mission" },
+  { id: "osu_14", name: "Heritage Hospital Osogbo", city: "Osogbo", state: "Osun", type: "private" },
+  { id: "osu_15", name: "Seventh Day Hospital Ile-Ife", city: "Ile-Ife", state: "Osun", type: "mission" },
 
   // ── OYO ───────────────────────────────────────────────────────────────────
   { id: "oyo_01", name: "University College Hospital (UCH) Ibadan", city: "Ibadan", state: "Oyo", type: "federal" },
@@ -453,6 +517,9 @@ export const HOSPITALS: Hospital[] = [
   { id: "oyo_13", name: "Ona-Ara General Hospital", city: "Ibadan", state: "Oyo", type: "state" },
   { id: "oyo_14", name: "General Hospital Ogbomosho", city: "Ogbomosho", state: "Oyo", type: "state" },
   { id: "oyo_15", name: "Primus Medical Centre Ibadan", city: "Ibadan", state: "Oyo", type: "private" },
+  { id: "oyo_16", name: "Immaculate Heart Hospital Ibadan", city: "Ibadan", state: "Oyo", type: "mission" },
+  { id: "oyo_17", name: "Geo Hospital Ibadan", city: "Ibadan", state: "Oyo", type: "private" },
+  { id: "oyo_18", name: "LAUTECH Teaching Hospital Ogbomosho", city: "Ogbomosho", state: "Oyo", type: "state" },
 
   // ── PLATEAU ───────────────────────────────────────────────────────────────
   { id: "pla_01", name: "Jos University Teaching Hospital (JUTH)", city: "Jos", state: "Plateau", type: "federal" },
@@ -468,6 +535,7 @@ export const HOSPITALS: Hospital[] = [
   { id: "pla_11", name: "Enos Medical Centre Jos", city: "Jos", state: "Plateau", type: "private" },
   { id: "pla_12", name: "Pine Brook Hospital Jos", city: "Jos", state: "Plateau", type: "private" },
   { id: "pla_13", name: "General Hospital Bukuru", city: "Bukuru", state: "Plateau", type: "state" },
+  { id: "pla_14", name: "Bingham University Teaching Hospital", city: "Jos", state: "Plateau", type: "mission" },
 
   // ── RIVERS ────────────────────────────────────────────────────────────────
   { id: "riv_01", name: "University of Port Harcourt Teaching Hospital (UPTH)", city: "Port Harcourt", state: "Rivers", type: "federal" },
@@ -483,6 +551,10 @@ export const HOSPITALS: Hospital[] = [
   { id: "riv_11", name: "Portmedic Hospital", city: "Port Harcourt", state: "Rivers", type: "private" },
   { id: "riv_12", name: "St. Mary's Hospital Elele", city: "Ahoada", state: "Rivers", type: "mission" },
   { id: "riv_13", name: "Nkpolu General Hospital", city: "Port Harcourt", state: "Rivers", type: "state" },
+  { id: "riv_14", name: "Medicare Specialist Hospital", city: "Port Harcourt", state: "Rivers", type: "private" },
+  { id: "riv_15", name: "Gold Cross Hospital", city: "Port Harcourt", state: "Rivers", type: "private" },
+  { id: "riv_16", name: "Rumuola General Hospital", city: "Port Harcourt", state: "Rivers", type: "state" },
+  { id: "riv_17", name: "Obio General Hospital", city: "Port Harcourt", state: "Rivers", type: "state" },
 
   // ── SOKOTO ────────────────────────────────────────────────────────────────
   { id: "sok_01", name: "Usmanu Danfodiyo University Teaching Hospital", city: "Sokoto", state: "Sokoto", type: "federal" },
@@ -496,6 +568,7 @@ export const HOSPITALS: Hospital[] = [
   { id: "sok_09", name: "Sokoto State General Hospital", city: "Sokoto", state: "Sokoto", type: "state" },
   { id: "sok_10", name: "Modern Hospital Sokoto", city: "Sokoto", state: "Sokoto", type: "private" },
   { id: "sok_11", name: "General Hospital Goronyo", city: "Goronyo", state: "Sokoto", type: "state" },
+  { id: "sok_12", name: "Sokoto Specialist Medical Centre", city: "Sokoto", state: "Sokoto", type: "private" },
 
   // ── TARABA ────────────────────────────────────────────────────────────────
   { id: "tar_01", name: "Federal Medical Centre Jalingo", city: "Jalingo", state: "Taraba", type: "federal" },
@@ -509,6 +582,7 @@ export const HOSPITALS: Hospital[] = [
   { id: "tar_09", name: "SUM Hospital Wukari", city: "Wukari", state: "Taraba", type: "mission" },
   { id: "tar_10", name: "Faith Specialist Hospital Jalingo", city: "Jalingo", state: "Taraba", type: "private" },
   { id: "tar_11", name: "General Hospital Takum", city: "Takum", state: "Taraba", type: "state" },
+  { id: "tar_12", name: "Jalingo Medical Centre", city: "Jalingo", state: "Taraba", type: "private" },
 
   // ── YOBE ──────────────────────────────────────────────────────────────────
   { id: "yob_01", name: "Federal Medical Centre Nguru", city: "Nguru", state: "Yobe", type: "federal" },
@@ -522,6 +596,7 @@ export const HOSPITALS: Hospital[] = [
   { id: "yob_09", name: "General Hospital Bade", city: "Bade", state: "Yobe", type: "state" },
   { id: "yob_10", name: "Prime Medical Centre Damaturu", city: "Damaturu", state: "Yobe", type: "private" },
   { id: "yob_11", name: "General Hospital Geidam", city: "Geidam", state: "Yobe", type: "state" },
+  { id: "yob_12", name: "Yobe State University Teaching Hospital", city: "Damaturu", state: "Yobe", type: "state" },
 
   // ── ZAMFARA ───────────────────────────────────────────────────────────────
   { id: "zam_01", name: "Federal Medical Centre Gusau", city: "Gusau", state: "Zamfara", type: "federal" },
@@ -535,6 +610,7 @@ export const HOSPITALS: Hospital[] = [
   { id: "zam_09", name: "Gusau General Hospital", city: "Gusau", state: "Zamfara", type: "state" },
   { id: "zam_10", name: "Life Care Hospital Gusau", city: "Gusau", state: "Zamfara", type: "private" },
   { id: "zam_11", name: "General Hospital Maru", city: "Maru", state: "Zamfara", type: "state" },
+  { id: "zam_12", name: "Zamfara Specialist Medical Centre", city: "Gusau", state: "Zamfara", type: "private" },
 ];
 
 export function getHospitalsByState(state: string): Hospital[] {
