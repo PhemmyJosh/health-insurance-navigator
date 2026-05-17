@@ -1,17 +1,13 @@
 import Link from "next/link";
-import { Figtree, Manrope } from "next/font/google";
-
-const figtree = Figtree({ subsets: ["latin"], weight: ["700"] });
-const manrope = Manrope({ subsets: ["latin"], weight: ["400"] });
 
 const imgLogo = "/logo.png";
 const imgHero = "/hero.png";
 
 export default function LandingPage() {
   return (
-    <div className={`bg-[#fcfcfc] min-h-screen flex flex-col ${manrope.className}`}>
+    <div className="bg-[#fcfcfc] min-h-screen flex flex-col">
       {/* Nav */}
-      <div className="pt-[58px] px-[142px]">
+      <div className="pt-6 px-[142px]">
         <nav className="flex items-center justify-between h-[50px]">
           <img
             src={imgLogo}
@@ -20,16 +16,15 @@ export default function LandingPage() {
           />
           <Link
             href="/quiz"
-            className="relative overflow-hidden inline-flex items-center justify-center bg-[#e8603c] text-white text-[16px] px-8 py-4 rounded-[48px]"
+            className="inline-flex items-center justify-center bg-[#e8603c] text-white text-[14px] px-5 py-2 rounded-[48px]"
           >
-            <span className="absolute rounded-full w-[140px] h-[140px] bg-white/10 -left-[142px] top-1/2 -translate-y-1/2" />
-            <span className="relative">Get Started</span>
+            Get Started
           </Link>
         </nav>
       </div>
 
       {/* Hero */}
-      <section className="flex items-start px-[144px] mt-[140px] flex-1">
+      <section className="flex items-start px-[144px] mt-8 flex-1">
         {/* Left content */}
         <div className="flex flex-col gap-4 w-[533px] shrink-0">
           <div className="inline-flex items-center gap-2 bg-[#ebfffd] border border-[#0f766e] px-4 py-2 rounded-full self-start">
@@ -42,7 +37,8 @@ export default function LandingPage() {
           <div className="flex flex-col gap-10">
             <div className="flex flex-col gap-4">
               <h1
-                className={`${figtree.className} text-[64px] font-bold text-[#1a1a1a] leading-[1.1] tracking-[-1.28px]`}
+                className="text-[64px] font-bold text-[#1a1a1a] leading-[1.1] tracking-[-1.28px]"
+                style={{ fontFamily: "var(--font-figtree)" }}
               >
                 We'll find the right health insurance for you
               </h1>

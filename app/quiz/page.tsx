@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 const NIGERIAN_STATES = [
   "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa", "Benue",
@@ -95,15 +96,16 @@ export default function QuizPage() {
 
   return (
     <main className="min-h-screen flex flex-col bg-white">
-      {/* Header */}
+      {/* Nav */}
       <header className="px-6 py-4 border-b border-gray-100">
         <div className="max-w-xl mx-auto flex items-center justify-between">
-          <span className="text-[#1B4F8A] font-semibold">
-            HealthNav <span className="text-[#E67E22]">Nigeria</span>
-          </span>
-          <span className="text-sm text-gray-400 font-medium">
-            {step} of {TOTAL_STEPS}
-          </span>
+          <img src="/logo.png" alt="laima" className="h-[35px] w-[94px] object-cover" />
+          <Link
+            href="/quiz"
+            className="inline-flex items-center justify-center bg-[#e8603c] text-white text-[14px] px-5 py-2 rounded-[48px]"
+          >
+            Get Started
+          </Link>
         </div>
       </header>
 
@@ -303,7 +305,7 @@ function Question({
 }) {
   return (
     <div className="space-y-3">
-      <h2 className="text-2xl font-bold text-gray-900 leading-snug">{label}</h2>
+      <h2 className="text-2xl font-bold text-gray-900 leading-snug" style={{ fontFamily: "var(--font-figtree)" }}>{label}</h2>
       {hint && <p className="text-sm text-gray-400">{hint}</p>}
       {children}
     </div>

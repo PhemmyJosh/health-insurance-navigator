@@ -52,14 +52,15 @@ export default function ResultPage() {
 
   return (
     <main className="min-h-screen bg-white flex flex-col">
-      {/* Header */}
+      {/* Nav */}
       <header className="px-6 py-4 border-b border-gray-100">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
-          <Link href="/" className="text-[#1B4F8A] font-semibold">
-            HealthNav <span className="text-[#E67E22]">Nigeria</span>
-          </Link>
-          <Link href="/quiz" className="text-sm text-gray-400 hover:text-gray-600 transition-colors">
-            Start Over
+          <img src="/logo.png" alt="laima" className="h-[35px] w-[94px] object-cover" />
+          <Link
+            href="/quiz"
+            className="inline-flex items-center justify-center bg-[#e8603c] text-white text-[14px] px-5 py-2 rounded-[48px]"
+          >
+            Get Started
           </Link>
         </div>
       </header>
@@ -86,7 +87,7 @@ export default function ResultPage() {
                 <p className="text-sm font-medium uppercase tracking-widest text-[#E67E22]">
                   Your recommended plan
                 </p>
-                <h1 className="text-3xl font-bold text-gray-900">{rec.primary}</h1>
+                <h1 className="text-3xl font-bold text-gray-900" style={{ fontFamily: "var(--font-figtree)" }}>{rec.primary}</h1>
                 <p className="text-[#1B4F8A] font-medium">{rec.hmo}</p>
               </div>
 
@@ -103,7 +104,7 @@ export default function ResultPage() {
 
               {/* Reason */}
               <div className="space-y-2">
-                <h2 className="font-semibold text-gray-800">Why this plan fits you</h2>
+                <h2 className="font-semibold text-gray-800" style={{ fontFamily: "var(--font-figtree)" }}>Why this plan fits you</h2>
                 <p className="text-gray-600 leading-relaxed">{rec.reason}</p>
               </div>
 
@@ -118,7 +119,7 @@ export default function ResultPage() {
               {/* Alternatives */}
               {rec.alternatives && rec.alternatives.length > 0 && (
                 <div className="space-y-3">
-                  <h2 className="font-semibold text-gray-800">Also worth considering</h2>
+                  <h2 className="font-semibold text-gray-800" style={{ fontFamily: "var(--font-figtree)" }}>Also worth considering</h2>
                   <div className="flex flex-col gap-3">
                     {rec.alternatives.map((alt, i) => (
                       <div
