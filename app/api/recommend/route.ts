@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI, SchemaType, type Schema } from "@google/generative-ai";
-import { PLANS } from "@/lib/plans";
+import { PLANS, type Plan } from "@/lib/plans";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
@@ -11,41 +11,47 @@ You genuinely care about helping this person make the right decision.
 
 CRITICAL RULES:
 Never recommend a plan without verified data.
+Every claim (confirmedTags, caveatTags, dynamicStatLabel/Value) must be grounded in the actual fields of that plan as given below — never invent a benefit, number, or waiting period that isn't in the data.
 If a field is marked VERIFY, flag it in watchOut and tell them to confirm with the HMO directly.
 Never hide exclusions relevant to the user.
 If a user has a condition and the plan has a waiting period, say so clearly.
 Sound like a helpful friend, not a brochure.
-Use everyday Nigerian English throughout.`;
+Use everyday Nigerian English throughout.
+
+You must return exactly 3 candidates, ranked best fit first, each referencing a distinct plan by its exact "id" field from the plans list.
+For each candidate:
+- planId: the exact "id" of one of the given plans.
+- reason: 2–4 sentences on why this specific plan suits this specific user.
+- altNote: exactly one short sentence, written as if this plan were being suggested as a secondary option.
+- watchOut: one sentence — the single most important caveat to verify for this plan.
+- confirmedTags: 2–4 short phrases (max ~6 words each) naming confirmed benefits, grounded in this plan's actual fields.
+- caveatTags: 1–3 short phrases (max ~6 words each) naming caveats such as waiting periods or exclusions, grounded in this plan's actual fields.
+- dynamicStatLabel + dynamicStatValue: pick whichever of maternityCover / chronicConditionPolicy / outpatientCover / inpatientCover is most relevant to this user's stated conditions and priority, and compress it into a short label (e.g. "Maternity cover") and a short value (e.g. "₦300k after 9-month wait") suitable for a compact stat column.`;
+
+const CANDIDATE_SCHEMA: Schema = {
+  type: SchemaType.OBJECT,
+  properties: {
+    planId: { type: SchemaType.STRING },
+    reason: { type: SchemaType.STRING },
+    altNote: { type: SchemaType.STRING },
+    watchOut: { type: SchemaType.STRING },
+    confirmedTags: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
+    caveatTags: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
+    dynamicStatLabel: { type: SchemaType.STRING },
+    dynamicStatValue: { type: SchemaType.STRING },
+  },
+  required: [
+    "planId", "reason", "altNote", "watchOut",
+    "confirmedTags", "caveatTags", "dynamicStatLabel", "dynamicStatValue",
+  ],
+};
 
 const RESPONSE_SCHEMA: Schema = {
   type: SchemaType.OBJECT,
   properties: {
-    primary: {
-      type: SchemaType.OBJECT,
-      properties: {
-        hmo: { type: SchemaType.STRING },
-        planName: { type: SchemaType.STRING },
-        monthlyPremium: { type: SchemaType.NUMBER },
-        enrollUrl: { type: SchemaType.STRING },
-      },
-      required: ["hmo", "planName", "monthlyPremium", "enrollUrl"],
-    },
-    reason: { type: SchemaType.STRING },
-    watchOut: { type: SchemaType.STRING },
-    alternatives: {
-      type: SchemaType.ARRAY,
-      items: {
-        type: SchemaType.OBJECT,
-        properties: {
-          hmo: { type: SchemaType.STRING },
-          planName: { type: SchemaType.STRING },
-          note: { type: SchemaType.STRING },
-        },
-        required: ["hmo", "planName", "note"],
-      },
-    },
+    candidates: { type: SchemaType.ARRAY, items: CANDIDATE_SCHEMA },
   },
-  required: ["primary", "reason", "watchOut", "alternatives"],
+  required: ["candidates"],
 };
 
 type UserProfile = {
@@ -57,6 +63,33 @@ type UserProfile = {
   conditions: string;
   preferredHospital: string;
   priority: string;
+};
+
+type GeminiCandidate = {
+  planId: string;
+  reason: string;
+  altNote: string;
+  watchOut: string;
+  confirmedTags: string[];
+  caveatTags: string[];
+  dynamicStatLabel: string;
+  dynamicStatValue: string;
+};
+
+export type PlanCard = {
+  planId: string;
+  hmo: string;
+  planName: string;
+  monthlyPremium: number;
+  enrollUrl: string;
+  annualBenefitLimit: string;
+  hospitalsCount: number;
+  dynamicStat: { label: string; value: string };
+  reason: string;
+  altNote: string;
+  watchOut: string;
+  confirmedTags: string[];
+  caveatTags: string[];
 };
 
 const BUDGET_LABELS: Record<string, string> = {
@@ -96,7 +129,25 @@ function buildUserPrompt(profile: UserProfile): string {
 Here are the available plans:
 ${JSON.stringify(PLANS, null, 2)}
 
-Recommend the best plan for this person.`;
+Recommend the best 3 plans for this person, ranked best fit first.`;
+}
+
+function mergeCandidate(candidate: GeminiCandidate, plan: Plan): PlanCard {
+  return {
+    planId: plan.id,
+    hmo: plan.hmo,
+    planName: plan.planName,
+    monthlyPremium: plan.monthlyPremium,
+    enrollUrl: plan.enrollUrl,
+    annualBenefitLimit: plan.annualBenefitLimit,
+    hospitalsCount: plan.keyHospitals.length,
+    dynamicStat: { label: candidate.dynamicStatLabel, value: candidate.dynamicStatValue },
+    reason: candidate.reason,
+    altNote: candidate.altNote,
+    watchOut: candidate.watchOut,
+    confirmedTags: candidate.confirmedTags,
+    caveatTags: candidate.caveatTags,
+  };
 }
 
 export async function POST(req: NextRequest) {
@@ -121,9 +172,21 @@ export async function POST(req: NextRequest) {
 
     const result = await model.generateContent(buildUserPrompt(profile));
     const text = result.response.text();
-    const recommendation = JSON.parse(text);
+    const parsed: { candidates: GeminiCandidate[] } = JSON.parse(text);
 
-    return NextResponse.json(recommendation);
+    if (!Array.isArray(parsed.candidates) || parsed.candidates.length !== 3) {
+      throw new Error("Model did not return exactly 3 candidates.");
+    }
+
+    const candidates = parsed.candidates.map((candidate) => {
+      const plan = PLANS.find((p) => p.id === candidate.planId);
+      if (!plan) {
+        throw new Error(`Model returned unknown planId "${candidate.planId}".`);
+      }
+      return mergeCandidate(candidate, plan);
+    });
+
+    return NextResponse.json({ candidates });
   } catch (err) {
     console.error("Recommendation error:", err);
     const message =
