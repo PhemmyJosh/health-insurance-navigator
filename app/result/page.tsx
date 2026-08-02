@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { Warning } from "@phosphor-icons/react";
+import { Warning, ArrowUUpLeft, Share } from "@phosphor-icons/react";
 
 type PlanCard = {
   planId: string;
@@ -25,6 +26,19 @@ type Recommendation = {
   candidates: PlanCard[];
 };
 
+declare global {
+  interface Window {
+    html2canvas?: (
+      element: HTMLElement,
+      options?: Record<string, unknown>
+    ) => Promise<HTMLCanvasElement>;
+  }
+}
+
+const HTML2CANVAS_SRC =
+  "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
+const HTML2CANVAS_SCRIPT_ID = "html2canvas-script";
+
 const LOADING_MESSAGES = [
   "Reviewing your health profile...",
   "Checking available plans across Nigeria...",
@@ -34,11 +48,60 @@ const LOADING_MESSAGES = [
   "Almost ready — putting it all together...",
 ];
 
+function loadHtml2Canvas(): Promise<NonNullable<Window["html2canvas"]>> {
+  return new Promise((resolve, reject) => {
+    if (window.html2canvas) {
+      resolve(window.html2canvas);
+      return;
+    }
+
+    const onReady = () => {
+      if (window.html2canvas) resolve(window.html2canvas);
+      else reject(new Error("html2canvas failed to load"));
+    };
+    const onError = () => reject(new Error("html2canvas failed to load"));
+
+    const existing = document.getElementById(HTML2CANVAS_SCRIPT_ID);
+    if (existing) {
+      existing.addEventListener("load", onReady);
+      existing.addEventListener("error", onError);
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.id = HTML2CANVAS_SCRIPT_ID;
+    script.src = HTML2CANVAS_SRC;
+    script.async = true;
+    script.onload = onReady;
+    script.onerror = onError;
+    document.body.appendChild(script);
+  });
+}
+
+function firstSentence(text: string): string {
+  const match = text.match(/^[^.!?]*[.!?]/);
+  return (match ? match[0] : text).trim();
+}
+
+function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
 export default function ResultPage() {
+  const router = useRouter();
   const [order, setOrder] = useState<PlanCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [copied, setCopied] = useState(false);
+  const [showStartOverModal, setShowStartOverModal] = useState(false);
+  const [sharing, setSharing] = useState(false);
+  const shareCardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const stored = sessionStorage.getItem("recommendation");
@@ -90,13 +153,49 @@ export default function ResultPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
+  function confirmStartOver() {
+    sessionStorage.removeItem("recommendation");
+    router.push("/quiz");
+  }
+
   async function handleShare() {
+    if (sharing) return;
+    setSharing(true);
     try {
-      await navigator.clipboard.writeText(window.location.href);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
+      const node = shareCardRef.current;
+      if (!node) return;
+
+      const html2canvas = await loadHtml2Canvas();
+      const canvas = await html2canvas(node, {
+        backgroundColor: "#FFFFFF",
+        width: 400,
+        height: 500,
+      });
+      const blob: Blob | null = await new Promise((resolve) =>
+        canvas.toBlob(resolve, "image/png")
+      );
+      if (!blob) return;
+
+      const file = new File([blob], "laima-plan.png", { type: "image/png" });
+      const canUseShare =
+        typeof navigator.share === "function" &&
+        (typeof navigator.canShare !== "function" || navigator.canShare({ files: [file] }));
+
+      if (canUseShare) {
+        try {
+          await navigator.share({ files: [file], title: "My Laima health plan" });
+          return;
+        } catch (err) {
+          if (err instanceof Error && err.name === "AbortError") return;
+          // fall through to download
+        }
+      }
+
+      downloadBlob(blob, "laima-plan.png");
     } catch {
-      // Fallback for browsers that block clipboard without user gesture
+      // Image generation failed — nothing to share
+    } finally {
+      setSharing(false);
     }
   }
 
@@ -130,9 +229,21 @@ export default function ResultPage() {
             </div>
           )}
 
-          {!error && primary && (
+          {!error && primary && showStartOverModal && (
+            <StartOverModal
+              onConfirm={confirmStartOver}
+              onCancel={() => setShowStartOverModal(false)}
+            />
+          )}
+
+          {!error && primary && !showStartOverModal && (
             <>
-              <PlanCardView plan={primary} />
+              <PlanCardView
+                plan={primary}
+                onStartOver={() => setShowStartOverModal(true)}
+                onShare={handleShare}
+                sharing={sharing}
+              />
 
               {alternatives.length > 0 && (
                 <div className="space-y-3">
@@ -167,60 +278,181 @@ export default function ResultPage() {
                   href={primary.enrollUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full text-center bg-[#e8632a] hover:bg-[#d4551f] text-white font-semibold py-3.5 rounded-xl transition-colors duration-150"
+                  className="block w-full text-center bg-[#e8632a] hover:bg-[#d4551f] text-white font-semibold py-3.5 rounded-xl transition-colors duration-150"
                 >
                   Enroll in {primary.planName} →
                 </a>
 
                 <button
+                  type="button"
                   onClick={handleShare}
-                  className="w-full text-center border-[0.5px] border-[#e8632a] text-[#e8632a] hover:bg-orange-50 font-semibold py-3.5 rounded-xl transition-colors duration-150"
+                  disabled={sharing}
+                  className="w-full text-center border-[0.5px] border-[#e8632a] text-[#e8632a] hover:bg-orange-50 font-semibold py-3.5 rounded-xl transition-colors duration-150 disabled:opacity-50"
                 >
-                  {copied ? "Link copied!" : "Share my result"}
+                  {sharing ? "Preparing..." : "Share my result"}
                 </button>
-
-                <Link
-                  href="/quiz"
-                  className="text-center text-sm text-gray-400 hover:text-gray-600 transition-colors"
-                >
-                  Start over
-                </Link>
               </div>
             </>
           )}
         </div>
       </section>
+
+      {/* Hidden share card — captured to PNG via html2canvas, never shown on screen */}
+      {primary && (
+        <div
+          ref={shareCardRef}
+          className="absolute left-[-9999px] top-0"
+          style={{
+            width: 400,
+            height: 500,
+            backgroundColor: "#FFFFFF",
+            padding: 32,
+            boxSizing: "border-box",
+            fontFamily: "Arial, Helvetica, sans-serif",
+          }}
+        >
+          <div style={{ fontSize: 22, fontWeight: 700 }}>
+            <span style={{ color: "#E8632A" }}>l</span>
+            <span style={{ color: "#1A1A1A" }}>aima</span>
+          </div>
+          <p
+            style={{
+              fontSize: 11,
+              fontWeight: 700,
+              letterSpacing: 1.5,
+              color: "#888888",
+              marginTop: 20,
+              textTransform: "uppercase",
+            }}
+          >
+            My health plan
+          </p>
+          <p style={{ fontSize: 24, fontWeight: 700, color: "#1A1A1A", marginTop: 10 }}>
+            {primary.planName}
+          </p>
+          <p style={{ fontSize: 14, color: "#666666", marginTop: 2 }}>{primary.hmo}</p>
+          <p style={{ fontSize: 28, fontWeight: 700, color: "#1A1A1A", marginTop: 14 }}>
+            ₦{primary.monthlyPremium.toLocaleString()}/month
+          </p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 14 }}>
+            {primary.confirmedTags.slice(0, 4).map((tag) => (
+              <span
+                key={tag}
+                style={{
+                  backgroundColor: "#EAF3DE",
+                  color: "#3B6D11",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  padding: "6px 12px",
+                  borderRadius: 999,
+                }}
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+          <p style={{ fontSize: 14, color: "#444444", marginTop: 18, lineHeight: 1.5 }}>
+            {firstSentence(primary.reason)}
+          </p>
+          <p style={{ position: "absolute", left: 32, right: 32, bottom: 24, fontSize: 12, color: "#888888" }}>
+            Find your plan at trylaima.vercel.app
+          </p>
+        </div>
+      )}
     </main>
   );
 }
 
-function PlanCardView({ plan }: { plan: PlanCard }) {
+function StartOverModal({
+  onConfirm, onCancel,
+}: {
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <div className="min-h-[500px] rounded-xl bg-black/60 flex items-center justify-center p-6">
+      <div className="bg-white rounded-xl p-6 max-w-sm w-full text-center space-y-4">
+        <h2
+          className="text-lg font-bold text-gray-900"
+          style={{ fontFamily: "var(--font-figtree)" }}
+        >
+          Start over?
+        </h2>
+        <p className="text-sm text-gray-600 leading-relaxed">
+          This will clear your current recommendation and take you back to the beginning.
+        </p>
+        <div className="flex flex-col gap-3 pt-2">
+          <button
+            type="button"
+            onClick={onConfirm}
+            className="w-full bg-[#e8632a] hover:bg-[#d4551f] text-white font-semibold py-3 rounded-xl transition-colors duration-150"
+          >
+            Yes, start over
+          </button>
+          <button
+            type="button"
+            onClick={onCancel}
+            className="w-full border-[0.5px] border-gray-300 text-gray-700 font-semibold py-3 rounded-xl hover:bg-gray-50 transition-colors duration-150"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PlanCardView({
+  plan, onStartOver, onShare, sharing,
+}: {
+  plan: PlanCard;
+  onStartOver: () => void;
+  onShare: () => void;
+  sharing: boolean;
+}) {
   return (
     <div className="bg-white border-[0.5px] border-gray-200 rounded-xl p-6">
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
-        <h1
-          className="text-2xl font-bold text-gray-900 leading-snug"
-          style={{ fontFamily: "var(--font-figtree)" }}
-        >
-          {plan.planName}
-        </h1>
-        <span className="shrink-0 rounded-full bg-[#EBFFFD] text-[#0f766e] text-xs font-medium px-3 py-1">
-          {plan.hmo}
-        </span>
+        <div>
+          <h1
+            className="text-2xl font-bold text-gray-900 leading-snug"
+            style={{ fontFamily: "var(--font-figtree)" }}
+          >
+            {plan.planName}
+          </h1>
+          <p className="text-sm text-gray-400 font-medium mt-0.5">{plan.hmo}</p>
+          <p className="mt-2">
+            <span className="text-2xl font-bold text-gray-900">
+              ₦{plan.monthlyPremium.toLocaleString()}
+            </span>
+            <span className="text-sm text-gray-400 ml-1">/month</span>
+          </p>
+        </div>
+        <div className="flex items-center gap-1 shrink-0">
+          <button
+            type="button"
+            onClick={onStartOver}
+            aria-label="Start over"
+            className="p-1 text-gray-400 hover:text-gray-900 transition-colors duration-150"
+          >
+            <ArrowUUpLeft size={20} />
+          </button>
+          <button
+            type="button"
+            onClick={onShare}
+            disabled={sharing}
+            aria-label="Share"
+            className="p-1 text-gray-400 hover:text-gray-900 transition-colors duration-150 disabled:opacity-50"
+          >
+            <Share size={20} />
+          </button>
+        </div>
       </div>
-
-      {/* Price */}
-      <p className="mt-2 flex items-baseline gap-1">
-        <span className="text-3xl font-bold text-gray-900">
-          ₦{plan.monthlyPremium.toLocaleString()}
-        </span>
-        <span className="text-sm text-gray-400">/ month</span>
-      </p>
 
       {/* Trust tags */}
       {(plan.confirmedTags.length > 0 || plan.caveatTags.length > 0) && (
-        <div className="flex flex-wrap gap-2 mt-3">
+        <div className="flex flex-wrap gap-2 mt-4">
           {plan.confirmedTags.map((tag) => (
             <span
               key={tag}
@@ -242,15 +474,8 @@ function PlanCardView({ plan }: { plan: PlanCard }) {
         </div>
       )}
 
-      {/* Stat bar */}
-      <div className="grid grid-cols-3 divide-x divide-gray-200 border-y-[0.5px] border-gray-200 mt-5 py-4">
-        <Stat label="Annual limit" value={plan.annualBenefitLimit} />
-        <Stat label="Hospitals" value={String(plan.hospitalsCount)} />
-        <Stat label={plan.dynamicStat.label} value={plan.dynamicStat.value} />
-      </div>
-
       {/* Why section */}
-      <div className="mt-5">
+      <div className="border-t-[0.5px] border-gray-200 mt-5 pt-5">
         <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
           Why this fits you
         </p>
@@ -272,15 +497,6 @@ function PlanCardView({ plan }: { plan: PlanCard }) {
           </p>
         </div>
       </div>
-    </div>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="text-center px-2">
-      <p className="text-sm font-bold text-gray-900 truncate">{value}</p>
-      <p className="text-[11px] text-gray-400 uppercase tracking-wide mt-0.5 truncate">{label}</p>
     </div>
   );
 }
