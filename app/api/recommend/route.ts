@@ -55,7 +55,6 @@ type UserProfile = {
   city: string;
   budget: string;
   conditions: string;
-  conditionsOther: string;
   preferredHospital: string;
   priority: string;
 };
@@ -83,10 +82,7 @@ const PRIORITY_LABELS: Record<string, string> = {
 function buildUserPrompt(profile: UserProfile): string {
   const location = [profile.state, profile.city].filter(Boolean).join(", ");
   const hospital = profile.preferredHospital || "None specified";
-  const conditions =
-    profile.conditions === "other" && profile.conditionsOther
-      ? profile.conditionsOther
-      : profile.conditions || "none";
+  const conditions = profile.conditions || "none";
 
   return `Here is the user profile:
 - Age: ${profile.age}

@@ -56,8 +56,9 @@ Both loaded via `next/font/google` in `app/layout.tsx` as CSS variables `--font-
 - Quiz / Result: centred single column, `max-w-xl`.
 - Logo: `laima` image from `/public/logo.png` (94×35px), linked to `/`.
 - Nav buttons: `rounded-[48px]` pill shape.
-- Quiz option buttons: `rounded-xl`, coral selected state.
-- Progress bar: `#0F766E` teal, transitions on step advance.
+- Quiz single-select fields: `RadioBoxGroup` — boxed cards (`rounded-xl`) with a circular radio indicator, coral border + `#FDF3F0` fill when selected.
+- Quiz multi-select fields: `TagGroup` — pill chips (`rounded-full`) with a small `+`/`×` icon badge, coral when selected.
+- Quiz is a single page (no step wizard, no progress bar) — form sits in a white card (`rounded-2xl`, `ring-1 ring-gray-100`, `shadow-sm`) on the warm-white page background.
 
 ---
 
@@ -70,7 +71,7 @@ health-insurance-navigator/
 │   ├── layout.tsx               # Root layout — fonts, metadata, body className
 │   ├── page.tsx                 # / — Landing page (Figma-matched design)
 │   ├── quiz/
-│   │   └── page.tsx             # /quiz — 7-step quiz flow
+│   │   └── page.tsx             # /quiz — single-page quiz form
 │   ├── result/
 │   │   └── page.tsx             # /result — Recommendation display + full-page loader
 │   └── api/
@@ -118,35 +119,33 @@ Rebuilt from a Figma frame (node `17-131`). Two-column desktop layout:
 
 ---
 
-### `/quiz` — Quiz flow (`app/quiz/page.tsx`)
+### `/quiz` — Quiz form (`app/quiz/page.tsx`)
 
-Client component. One question per screen. Teal progress bar fills as steps advance. Context message shown above every question.
+Client component. **Single-page form** — all fields render at once (no step wizard, no progress bar). Validates on submit; invalid fields get a red border/ring + inline "This field is required." warning message (no top-level summary banner).
 
-**Question order:**
+**Fields (in order):**
 
-| Step | Field | Type | Notes |
-|---|---|---|---|
-| 1 | `age` | Number input | — |
-| 2 | `coverage` | Single-select options | individual / couple / family |
-| 3 | `state` + `city` | Two dropdowns side by side | City disabled until state selected; city required for individual, optional for family |
-| 4 | `budget` | Single-select options | under_5k / 5k_10k / 10k_20k / above_20k |
-| 5 | `conditions` | **Multi-select tile grid** (3 per row) | 10 options; "Other" spans full width + reveals text input |
-| 6 | `preferredHospital` | Autocomplete search | Filters `lib/hospitals.ts` by state; shows pill on selection; manual fallback |
-| 7 | `priority` | Single-select options | routine / hospitalisation / maternity / emergency |
+| Field | Component | Notes |
+|---|---|---|
+| `age` | Number input | Boxy `rounded-xl` input |
+| `coverage` | `RadioBoxGroup` (3 columns) | individual / couple / family |
+| `state` + `city` | Two `<select>`s side by side | City disabled until state selected; city required for individual, optional for family |
+| `budget` | `RadioBoxGroup` (2 columns) | under_5k / 5k_10k / 10k_20k / above_20k |
+| `conditions` | `TagGroup` (multi-select pill chips) | 10 presets (incl. "None"); selecting "Other" reveals `OtherConditionInput` |
+| `preferredHospital` | Autocomplete search | Filters `lib/hospitals.ts` by state; shows pill on selection; manual fallback |
+| `priority` | `RadioBoxGroup` (2 columns) | routine / hospitalisation / maternity / emergency |
 
-**Contextual messages per step:**
-- Step 1: "Let's find your plan" headline + subtext
-- Steps 2–7: short warm message above the question (see `CONTEXTUAL_MESSAGES` in quiz page)
-
-**Navigation buttons:**
-- "Next" / "Get My Recommendation" — coral, `rounded-full`, full width
-- "← Back" — ghost text link
+**"Other" health conditions (`OtherConditionInput`):**
+- Live autocomplete via the NLM Clinical Tables API — `GET https://clinicaltables.nlm.nih.gov/api/conditions/v3/search?terms={query}&maxList=8` (public, no key/registration needed). Debounced 250ms, fires from 1 character (`useConditionSearch` hook).
+- Response shape is `[count, codes, extraData, displayStrings[][]]` — titles are `displayStrings.map(row => row[0])`.
+- Selected suggestions (or freeform typed text via Enter) become individually removable coral chips — supports adding multiple custom conditions, not just one.
+- Falls back to "No matches — press Enter to add '...'" if the API returns nothing or is unreachable, so manual entry always works.
 
 **Submission flow:**
-1. Serialize answers (`conditions` array → comma-separated string)
-2. Clear stale `recommendation` from sessionStorage
-3. Save `userAnswers` to sessionStorage
-4. `router.push("/result")` — API call happens on the result page
+1. Merge preset `conditions` (excluding the `"other"` marker) with `customConditions` into one comma-separated string.
+2. Clear stale `recommendation` from sessionStorage.
+3. Save `userAnswers` to sessionStorage.
+4. `router.push("/result")` — API call happens on the result page.
 
 ---
 
@@ -273,10 +272,11 @@ Answers and recommendations are ephemeral (sessionStorage). No database, no pers
 - [x] Laima branding — logo, coral/teal palette, Figtree/Manrope fonts
 - [x] Landing page rebuilt from Figma design (node 17-131)
 - [x] Consistent navbar across all pages (logo only on quiz/result)
-- [x] Quiz — 7 questions in correct order with contextual messages
-- [x] Location step — state + city side by side, city disabled until state selected
-- [x] Conditions step — 10-option tile grid, multi-select, "Other" free text
-- [x] Hospital step — autocomplete from 455-hospital dataset, pill on select, manual fallback
+- [x] Quiz rebuilt as a single one-page form — no step wizard, no progress bar
+- [x] Quiz dashboard-style redesign — boxy `rounded-xl` inputs, `RadioBoxGroup` single-selects, `TagGroup` multi-selects, inline per-field validation
+- [x] Location field — state + city side by side, city disabled until state selected
+- [x] Conditions field — tag-chip multi-select (10 presets); "Other" adds unlimited custom conditions via live NLM Clinical Tables API autocomplete
+- [x] Hospital field — autocomplete from 455-hospital dataset, pill on select, manual fallback
 - [x] Full-page recommendation loader with cycling messages
 - [x] Gemini 3.1 Flash Lite API connected with structured JSON output
 - [x] Five HMO placeholder plans in `lib/plans.ts`
