@@ -388,7 +388,9 @@ function priceRangeNote(
   return `₦${min.toLocaleString()} – ₦${max.toLocaleString()}/year depending on ${variesBy}`;
 }
 
-function mergeCandidate(candidate: GeminiCandidate, plan: Plan, ctx: EligibilityContext): PlanCard {
+function mergeCandidate(
+  candidate: GeminiCandidate, plan: Plan, ctx: EligibilityContext, isFamily: boolean
+): PlanCard {
   const base = {
     planId: plan.id,
     hmo: plan.hmo,
@@ -404,6 +406,13 @@ function mergeCandidate(candidate: GeminiCandidate, plan: Plan, ctx: Eligibility
   let card: PlanCard;
   if (plan.source === "placeholder") {
     card = { ...base, annualPremium: plan.monthlyPremium * 12 };
+  } else if (isFamily && plan.familyPricing) {
+    // Family-eligible plans (Hygeia HyBasic/HyPrime): use the family-of-4 rate.
+    // Plans with no familyPricing (HyPrime Plus/Exclusive, all AXA, all Leadway)
+    // charge per head, so the individual price is already correct for family
+    // coverage and falls through to the branches below.
+    const familyOf4 = plan.familyPricing.find((f) => f.size === 4) ?? plan.familyPricing[0];
+    card = { ...base, annualPremium: familyOf4.annualPremium };
   } else if (plan.annualPremium === null && plan.pricingByHospitalCategory) {
     card = {
       ...base,
@@ -435,6 +444,7 @@ export async function POST(req: NextRequest) {
     }
 
     const ctx = buildEligibilityContext(profile);
+    const isFamily = profile.coverage === "family";
     const { eligible } = filterEligiblePlans(PLANS, ctx);
 
     if (eligible.length === 0) {
@@ -471,7 +481,7 @@ export async function POST(req: NextRequest) {
       if (!plan) {
         throw new Error(`Model returned ineligible or unknown planId "${candidate.planId}".`);
       }
-      return mergeCandidate(candidate, plan, ctx);
+      return mergeCandidate(candidate, plan, ctx, isFamily);
     });
 
     return NextResponse.json({ candidates });
