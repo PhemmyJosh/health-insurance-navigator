@@ -10,17 +10,21 @@ type PlanCard = {
   planId: string;
   hmo: string;
   planName: string;
-  monthlyPremium: number;
+  // Always annual. null only when price varies by hospital category — see priceNote.
+  annualPremium: number | null;
+  priceNote?: string;
   enrollUrl: string;
-  annualBenefitLimit: string;
-  hospitalsCount: number;
-  dynamicStat: { label: string; value: string };
   reason: string;
   altNote: string;
   watchOut: string;
   confirmedTags: string[];
   caveatTags: string[];
 };
+
+function formatPrice(plan: PlanCard): string {
+  if (plan.annualPremium !== null) return `₦${plan.annualPremium.toLocaleString()}/year`;
+  return plan.priceNote ?? "Price varies";
+}
 
 type Recommendation = {
   candidates: PlanCard[];
@@ -260,8 +264,8 @@ export default function ResultPage() {
                       >
                         <div className="flex items-start justify-between gap-3">
                           <p className="font-medium text-gray-900">{alt.planName}</p>
-                          <p className="font-semibold text-gray-900 whitespace-nowrap">
-                            ₦{alt.monthlyPremium.toLocaleString()}
+                          <p className="font-semibold text-gray-900 whitespace-nowrap text-right">
+                            {formatPrice(alt)}
                           </p>
                         </div>
                         <p className="text-xs text-gray-500 font-medium mb-1">{alt.hmo}</p>
@@ -332,7 +336,7 @@ export default function ResultPage() {
           </p>
           <p style={{ fontSize: 14, color: "#666666", marginTop: 2 }}>{primary.hmo}</p>
           <p style={{ fontSize: 28, fontWeight: 700, color: "#1A1A1A", marginTop: 14 }}>
-            ₦{primary.monthlyPremium.toLocaleString()}/month
+            {formatPrice(primary)}
           </p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 14 }}>
             {primary.confirmedTags.slice(0, 4).map((tag) => (
@@ -423,10 +427,16 @@ function PlanCardView({
           </h1>
           <p className="text-sm text-gray-400 font-medium mt-0.5">{plan.hmo}</p>
           <p className="mt-2">
-            <span className="text-2xl font-bold text-gray-900">
-              ₦{plan.monthlyPremium.toLocaleString()}
-            </span>
-            <span className="text-sm text-gray-400 ml-1">/month</span>
+            {plan.annualPremium !== null ? (
+              <>
+                <span className="text-2xl font-bold text-gray-900">
+                  ₦{plan.annualPremium.toLocaleString()}
+                </span>
+                <span className="text-sm text-gray-400 ml-1">/year</span>
+              </>
+            ) : (
+              <span className="text-base font-semibold text-gray-900">{plan.priceNote}</span>
+            )}
           </p>
         </div>
         <div className="flex items-center gap-1 shrink-0">

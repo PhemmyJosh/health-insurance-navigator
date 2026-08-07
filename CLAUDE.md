@@ -21,6 +21,7 @@ Auto-deploys from the `master` branch via Vercel.
 | AI | Google Gemini API via `@google/generative-ai` |
 | Model | `gemini-3.1-flash-lite` |
 | Icons | Phosphor Icons (`@phosphor-icons/react`) |
+| Image export | `html2canvas` — loaded at runtime from cdnjs, **not** an npm dependency |
 | Deploy | Vercel (auto-deploy from GitHub) |
 | Node | 26.x |
 
@@ -41,6 +42,9 @@ Auto-deploys from the `master` branch via Vercel.
 | Amber-50 | `#FFFBEB` | Watch-out callout background |
 | Coral light | `#FDF3F0` | Selected tile / option background |
 | Input border | `#E5E5E5` | Unselected condition tile border |
+| Enroll orange | `#E8632A` | Result-page enroll/share buttons, start-over modal primary button (distinct from Coral, used only on `/result`) |
+| Trust tag green | bg `#EAF3DE` / text `#3B6D11` | Confirmed-benefit tags on the result plan card |
+| Trust tag amber | bg `#FAEEDA` / text `#854F0B` | Caveat tags + "one thing to watch out for" callout on the result plan card |
 
 **Typography**
 
@@ -53,7 +57,8 @@ Both loaded via `next/font/google` in `app/layout.tsx` as CSS variables `--font-
 
 **Layout**
 - Landing: full-width two-column hero, max content width `max-w-2xl`.
-- Quiz / Result: centred single column, `max-w-xl`.
+- Quiz: centred single column, `max-w-xl`.
+- Result: centred single column, `max-w-[480px]` — cards use `border-[0.5px]` hairline borders and `rounded-xl`, no shadows or gradients anywhere on the page.
 - Logo: `laima` image from `/public/logo.png` (94×35px), linked to `/`.
 - Nav buttons: `rounded-[48px]` pill shape.
 - Quiz single-select fields: `RadioBoxGroup` — boxed cards (`rounded-xl`) with a circular radio indicator, coral border + `#FDF3F0` fill when selected.
@@ -151,7 +156,7 @@ Client component. **Single-page form** — all fields render at once (no step wi
 
 ### `/result` — Result screen (`app/result/page.tsx`)
 
-Client component. On mount: checks sessionStorage for a cached recommendation, or calls `/api/recommend` with saved answers.
+Client component. On mount: checks sessionStorage for a cached `recommendation` (`{ candidates: PlanCard[] }`), or calls `/api/recommend` with saved `userAnswers` and caches the response.
 
 **Full-page loader** (shown while API call is in progress):
 - Laima logo centered
@@ -159,47 +164,67 @@ Client component. On mount: checks sessionStorage for a cached recommendation, o
 - Pulsing coral dot + cycling message (6 messages, 2.5s interval, Figtree bold)
 - "This usually takes less than 10 seconds" (Manrope, `#888888`)
 
-**Result card** (once loaded):
-- "Your recommended plan" label
-- Plan name (`h1`, Figtree)
-- HMO name
-- Monthly premium badge (teal background)
-- "Why this plan fits you" section
-- Amber "One thing to watch out for" callout
-- "Also worth considering" — two alternatives (plan name + HMO + note)
-- "Enroll Now" button (links to `enrollUrl`)
-- "Share My Result" — copies URL to clipboard
-- "Start Over" → `/quiz`
+**Plan card** (`PlanCardView`, once loaded) — `order[0]` is always rendered as primary:
+- Header: plan name (`h1`, Figtree) + HMO name as a plain muted subtitle below it (no pill/badge) + price (`₦X,XXX/month`) stacked on the left; two ghost icon buttons top-right — `ArrowUUpLeft` (start over) and `Share` (share), 20px, muted `text-gray-400` → `hover:text-gray-900`, no background/border ever.
+- Trust tags: green (`confirmedTags`) and amber (`caveatTags`) pill chips, Gemini-generated but grounded in that plan's real fields.
+- Hairline `border-t-[0.5px]` divider, then "WHY THIS FITS YOU" label + `reason` paragraph.
+- Amber "ONE THING TO WATCH OUT FOR" callout (`watchOut`) — lives inside the card, not a separate box below it.
+- No stat bar — `annualBenefitLimit`, `hospitalsCount`, and `dynamicStat` are still returned by the API but currently unused on the page (removed from the UI; kept in the schema in case it comes back).
 
-> **Next session:** Result page needs visual redesign in Figma before rework.
+**Alternatives** ("ALSO WORTH CONSIDERING"):
+- `order.slice(1)` — always the two plans not currently primary.
+- Each is a clickable card (plan name, muted HMO, one-line `altNote`, right-aligned price). Clicking calls `promote(index)`, which reorders `order` so the clicked plan becomes index 0 (pure client-side state — no extra API call, since every candidate already carries full detail from the one Gemini call) and smooth-scrolls to top (`window.scrollTo({ top: 0, behavior: "smooth" })`).
+
+**Start-over modal** (`StartOverModal`):
+- Triggered by the header's back-arrow icon. Rendered in **normal document flow, not `position: fixed`** — a `min-h-[500px]` block with a `bg-black/60` overlay, swapped in for the plan card/alternatives/buttons rather than layered on top.
+- "Yes, start over" (orange `#E8632A`) clears `recommendation` from sessionStorage and `router.push("/quiz")`; "Cancel" closes the modal.
+
+**Share flow** (`handleShare`):
+- A hidden 400×500px card (absolutely positioned off-screen at `left: -9999px`, hardcoded hex colors, not CSS variables) renders the Laima wordmark, "MY HEALTH PLAN" label, plan name, HMO, price, up to 4 green trust tags, and the first sentence of `reason` — captured via `html2canvas` (loaded dynamically from cdnjs on first use, see Tech stack).
+- Tries `navigator.share({ files: [pngFile], title: "My Laima health plan" })` first; if unsupported, or the user cancels (`AbortError`), it does nothing further; on any other failure it falls back to downloading `laima-plan.png`.
+- Triggered from both the header share icon and the bottom "Share my result" button.
+
+**Buttons:** "Enroll in [Plan Name] →" (orange `#E8632A`, primary) and "Share my result" (outlined). The old "Start Over" ghost link and bottom disclaimer line were removed — start-over now lives in the header modal.
 
 ---
 
 ### `POST /api/recommend` (`app/api/recommend/route.ts`)
 
-Receives `UserProfile` JSON, calls Gemini with structured JSON output enforced via `responseSchema`.
+Receives `UserProfile` JSON, calls Gemini with structured JSON output enforced via `responseSchema`, then **merges Gemini's picks with real `Plan` records** from `lib/plans.ts` before responding — pricing, `enrollUrl`, `annualBenefitLimit`, and `hospitalsCount` (`keyHospitals.length`) always come from our own data, never from the model.
 
 **Model:** `process.env.GEMINI_MODEL` (default: `gemini-3.1-flash-lite`)
 
-**System prompt:** Honest Nigerian health insurance advisor. Warm, plain English. Always surfaces limitations and VERIFY flags.
+**System prompt:** Honest Nigerian health insurance advisor. Warm, plain English. Always surfaces limitations and VERIFY flags. Every trust tag / stat must be grounded in that plan's actual fields — instructed never to invent a benefit, number, or waiting period.
 
-**User prompt:** Profile fields + full `PLANS` array from `lib/plans.ts` as JSON.
+**User prompt:** Profile fields + full `PLANS` array (including each plan's `id`) from `lib/plans.ts` as JSON. Asks for exactly 3 ranked candidates.
 
-**Response schema (enforced by Gemini):**
+**Gemini's raw output (`GeminiCandidate`, validated against `PLANS` ids):**
 ```ts
 {
-  primary: {
-    hmo: string
-    planName: string
-    monthlyPremium: number
-    enrollUrl: string
-  }
-  reason: string       // 3–4 sentence plain English
-  watchOut: string     // One limitation to verify
-  alternatives: [
-    { hmo: string, planName: string, note: string },
-    { hmo: string, planName: string, note: string }
+  candidates: [
+    {
+      planId: string          // must match a real Plan.id
+      reason: string           // 2–4 sentences, why this plan fits (shown when primary)
+      altNote: string          // one sentence, shown when demoted to an alternative
+      watchOut: string         // one sentence — the key caveat to verify
+      confirmedTags: string[]  // 2–4 short green-chip phrases
+      caveatTags: string[]     // 1–3 short amber-chip phrases
+      dynamicStatLabel: string
+      dynamicStatValue: string
+    }
+    // × 3, ranked best fit first
   ]
+}
+```
+If the model returns anything other than exactly 3 candidates, or a `planId` that doesn't match `lib/plans.ts`, the route throws and returns a 500 — no silent fallback.
+
+**Final response (`{ candidates: PlanCard[] }`, after merging with `PLANS`):**
+```ts
+{
+  planId, hmo, planName, monthlyPremium, enrollUrl,   // from the matched Plan
+  annualBenefitLimit, hospitalsCount,                 // from the matched Plan
+  dynamicStat: { label, value },                      // from Gemini
+  reason, altNote, watchOut, confirmedTags, caveatTags // from Gemini
 }
 ```
 
@@ -278,6 +303,10 @@ Answers and recommendations are ephemeral (sessionStorage). No database, no pers
 - [x] Conditions field — tag-chip multi-select (10 presets); "Other" adds unlimited custom conditions via live NLM Clinical Tables API autocomplete
 - [x] Hospital field — autocomplete from 455-hospital dataset, pill on select, manual fallback
 - [x] Full-page recommendation loader with cycling messages
+- [x] Result page redesigned — grounded plan card (trust tags/reason/watch-out sourced from real `Plan` data via Gemini, never invented), header start-over/share icons, alternatives swap-to-primary on click with scroll-to-top
+- [x] Start-over confirmation modal on `/result` — in-flow (no `position: fixed`), dark overlay
+- [x] Share-as-image on `/result` — hidden branded card captured via `html2canvas` (CDN, no npm install), shared via Web Share API with a download fallback
+- [x] `/api/recommend` returns 3 full candidates merged with real plan data instead of one primary + light-detail alternatives
 - [x] Gemini 3.1 Flash Lite API connected with structured JSON output
 - [x] Five HMO placeholder plans in `lib/plans.ts`
 - [x] 455 hospitals in `lib/hospitals.ts`
@@ -288,10 +317,11 @@ Answers and recommendations are ephemeral (sessionStorage). No database, no pers
 - [x] Auto-deploys on push to `master`
 
 **Pending — next session:**
-- [ ] Result page visual redesign (Figma design pending)
 - [ ] Replace placeholder HMO data with verified plans and pricing
 - [ ] Real hospital network data per HMO plan
 - [ ] Mobile responsiveness pass on landing page (currently desktop-optimised)
+- [ ] Click-test the result-page share flow (`html2canvas` + `navigator.share`) in a real browser — implemented and type/build-checked, but never driven end-to-end since no browser automation tool was available in-session
+- [ ] Consider trimming `annualBenefitLimit` / `hospitalsCount` / `dynamicStat` from the Gemini schema now that the stat bar is gone from the UI — still generated per candidate but currently unrendered
 
 ---
 
